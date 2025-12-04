@@ -4,8 +4,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { Button, Card, Badge, Modal } from '../../components/UI';
-import { Clock, MapPin, ShieldCheck, ChevronLeft, Heart } from 'lucide-react';
+import { Clock, MapPin, ShieldCheck, ChevronLeft, Heart, TrendingDown } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { motion } from 'framer-motion';
 
 const BagDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +20,12 @@ const BagDetails: React.FC = () => {
     queryKey: ['bag', id],
     queryFn: () => api.getBagById(id!),
     enabled: !!id
+  });
+
+  const { data: vendor } = useQuery({
+    queryKey: ['vendor', bag?.vendorId],
+    queryFn: () => api.getVendorById(bag!.vendorId),
+    enabled: !!bag?.vendorId
   });
 
   const reserveMutation = useMutation({
@@ -45,42 +52,77 @@ const BagDetails: React.FC = () => {
     }
   });
 
-  if (isLoading) return <div>Loading...</div>;
-  if (!bag) return <div>Bag not found</div>;
+  if (isLoading) {
+    return (
+      <div className="max-w-3xl mx-auto flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading bag details...</p>
+        </div>
+      </div>
+    );
+  }
+  if (!bag) return <div className="max-w-3xl mx-auto text-center py-20">Bag not found</div>;
+
+  const savings = bag.originalPrice - bag.price;
+  const savingsPercent = ((savings / bag.originalPrice) * 100).toFixed(0);
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <button onClick={() => navigate(-1)} className="flex items-center text-gray-500 hover:text-gray-900 mb-4">
-        <ChevronLeft size={20} /> Back to Browse
-      </button>
+    <motion.div 
+      className="max-w-4xl mx-auto"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      <motion.button 
+        onClick={() => navigate(-1)} 
+        className="flex items-center text-gray-600 hover:text-gray-900 mb-6 font-medium group"
+        whileHover={{ x: -4 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <ChevronLeft size={20} className="mr-1 group-hover:-translate-x-1 transition-transform" /> 
+        Back to Browse
+      </motion.button>
 
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
-        <div className="h-64 bg-gray-200 relative">
-          <img 
-            src={`https://picsum.photos/seed/${bag.vendorId}/800/400`} 
+      <Card className="overflow-hidden">
+        <div className="h-80 md:h-96 bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
+          <motion.img 
+            src={vendor?.photoUrl || `https://picsum.photos/seed/${bag.vendorId}/800/400`} 
             alt={bag.title} 
             className="w-full h-full object-cover"
+            initial={{ scale: 1.1 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.6 }}
           />
-           <div className="absolute bottom-4 left-4 bg-white px-3 py-1 rounded-full text-sm font-bold shadow-sm">
-             {bag.vendorCategory}
-           </div>
-           <button 
-             onClick={() => toggleFavMutation.mutate()}
-             className="absolute top-4 right-4 bg-white p-2 rounded-full shadow-md hover:scale-110 transition-transform"
-           >
-             <Heart className={isFavorite ? "fill-red-500 text-red-500" : "text-gray-400"} size={24} />
-           </button>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
+          <div className="absolute bottom-6 left-6">
+            <Badge variant="neutral" size="md">{bag.vendorCategory}</Badge>
+          </div>
+          <motion.button 
+            onClick={() => toggleFavMutation.mutate()}
+            className="absolute top-6 right-6 bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-lg hover:bg-white transition-colors"
+            whileHover={{ scale: 1.1, rotate: 5 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            <Heart className={isFavorite ? "fill-red-500 text-red-500" : "text-gray-400"} size={24} />
+          </motion.button>
         </div>
 
-        <div className="p-6 md:p-8 space-y-6">
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">{bag.title}</h1>
-              <p className="text-lg text-gray-600 font-medium">{bag.vendorName}</p>
+        <div className="p-6 md:p-10 space-y-8">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-6">
+            <div className="flex-1">
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2 tracking-tight">{bag.title}</h1>
+              <p className="text-xl text-gray-600 font-semibold">{bag.vendorName}</p>
             </div>
-            <div className="text-right">
-              <div className="text-3xl font-bold text-primary-600">${bag.price.toFixed(2)}</div>
-              <div className="text-gray-400 line-through text-sm">Value ${bag.originalPrice.toFixed(2)}</div>
+            <div className="flex flex-col items-end gap-2">
+              <div className="flex items-baseline gap-3">
+                <span className="text-4xl md:text-5xl font-bold text-primary-700">${bag.price.toFixed(2)}</span>
+                <span className="text-xl text-gray-400 line-through">${bag.originalPrice.toFixed(2)}</span>
+              </div>
+              <div className="flex items-center gap-2 bg-gradient-to-br from-green-50 to-green-100 px-4 py-2 rounded-xl border border-green-200">
+                <TrendingDown className="text-green-700" size={18} />
+                <span className="text-green-800 font-bold">Save ${savings.toFixed(2)} ({savingsPercent}% off)</span>
+              </div>
             </div>
           </div>
 
@@ -90,21 +132,39 @@ const BagDetails: React.FC = () => {
             ))}
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl">
-             <div className="flex items-start gap-3">
-               <Clock className="text-gray-400 mt-1" />
-               <div>
-                 <p className="font-semibold text-gray-900">Pickup Today</p>
-                 <p className="text-gray-600">{bag.pickupStart} - {bag.pickupEnd}</p>
-               </div>
-             </div>
-             <div className="flex items-start gap-3">
-               <MapPin className="text-gray-400 mt-1" />
-               <div>
-                 <p className="font-semibold text-gray-900">Location</p>
-                 <p className="text-gray-600">123 Mockingbird Lane, Singapore</p>
-               </div>
-             </div>
+          <div className="grid md:grid-cols-2 gap-4">
+            <motion.div 
+              className="bg-gradient-to-br from-primary-50 to-primary-100 p-5 rounded-2xl border border-primary-200"
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-primary-600 flex items-center justify-center flex-shrink-0">
+                  <Clock className="text-white" size={24} />
+                </div>
+                <div>
+                  <p className="font-bold text-gray-900 mb-1">Pickup Window</p>
+                  <p className="text-lg text-gray-700 font-semibold">{bag.pickupStart} - {bag.pickupEnd}</p>
+                  <p className="text-sm text-gray-500 mt-1">Today</p>
+                </div>
+              </div>
+            </motion.div>
+            <motion.div 
+              className="bg-gradient-to-br from-accent-50 to-accent-100 p-5 rounded-2xl border border-accent-200"
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-accent-600 flex items-center justify-center flex-shrink-0">
+                  <MapPin className="text-white" size={24} />
+                </div>
+                <div>
+                  <p className="font-bold text-gray-900 mb-1">Location</p>
+                  <p className="text-lg text-gray-700 font-semibold">{vendor?.address || '123 Mockingbird Lane'}</p>
+                  <p className="text-sm text-gray-500 mt-1">Singapore</p>
+                </div>
+              </div>
+            </motion.div>
           </div>
 
           <div className="space-y-2">
@@ -144,7 +204,7 @@ const BagDetails: React.FC = () => {
             </Button>
           </div>
         </div>
-      </div>
+      </Card>
 
       <Modal 
         isOpen={isConfirmOpen} 
@@ -174,7 +234,7 @@ const BagDetails: React.FC = () => {
           </div>
         </div>
       </Modal>
-    </div>
+    </motion.div>
   );
 };
 

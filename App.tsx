@@ -15,6 +15,7 @@ import ConsumerOrders from './pages/consumer/Orders';
 import ConsumerProfile from './pages/consumer/Profile';
 import BagDetails from './pages/consumer/BagDetails';
 import ConsumerFavorites from './pages/consumer/Favorites';
+import Map from './pages/consumer/Map';
 
 // Vendor Pages
 import VendorDashboard from './pages/vendor/Dashboard';
@@ -64,6 +65,7 @@ const App: React.FC = () => {
               <Route path="orders" element={<ConsumerOrders />} />
               <Route path="profile" element={<ConsumerProfile />} />
               <Route path="favorites" element={<ConsumerFavorites />} />
+              <Route path="map" element={<Map />} />
             </Route>
 
             {/* Vendor Routes */}
@@ -81,7 +83,38 @@ const App: React.FC = () => {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </HashRouter>
-        <Toaster position="bottom-center" />
+        <Toaster 
+          position="bottom-center"
+          toastOptions={{
+            className: '',
+            style: {
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              color: '#1d1d1f',
+              borderRadius: '16px',
+              padding: '14px 20px',
+              fontSize: '15px',
+              fontWeight: '500',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08)',
+              border: '0.5px solid rgba(0, 0, 0, 0.08)',
+              fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+            },
+            success: {
+              iconTheme: {
+                primary: '#dc2626',
+                secondary: '#ffffff',
+              },
+            },
+            error: {
+              iconTheme: {
+                primary: '#dc2626',
+                secondary: '#ffffff',
+              },
+            },
+            duration: 3000,
+          }}
+        />
       </AuthProvider>
     </QueryClientProvider>
   );

@@ -6,6 +6,7 @@ import { Card, Badge, Button } from '../../components/UI';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { DollarSign, ShoppingBag, Leaf, ArrowRight, TrendingUp, CreditCard } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 const VendorDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -17,85 +18,131 @@ const VendorDashboard: React.FC = () => {
     enabled: !!user
   });
 
-  if (isLoading) return <div>Loading dashboard...</div>;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+    <motion.div 
+      className="space-y-8"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <div className="text-sm text-gray-500">Welcome back, {user?.name}</div>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2 tracking-tight">Dashboard</h1>
+          <p className="text-lg text-gray-600 font-medium">Welcome back, {user?.name}</p>
         </div>
-        <div className="flex bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
-           <button 
+        <div className="flex bg-white/80 backdrop-blur-sm p-1.5 rounded-xl border border-gray-200 shadow-sm">
+           <motion.button 
              onClick={() => setActiveTab('overview')}
-             className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'overview' ? 'bg-primary-100 text-primary-700' : 'text-gray-600 hover:bg-gray-50'}`}
+             className={`px-5 py-2.5 text-sm font-semibold rounded-lg transition-all ${
+               activeTab === 'overview' 
+                 ? 'bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-500/25' 
+                 : 'text-gray-600 hover:bg-gray-50'
+             }`}
+             whileHover={{ scale: 1.05 }}
+             whileTap={{ scale: 0.95 }}
            >
              Overview
-           </button>
-           <button 
+           </motion.button>
+           <motion.button 
              onClick={() => setActiveTab('financials')}
-             className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'financials' ? 'bg-primary-100 text-primary-700' : 'text-gray-600 hover:bg-gray-50'}`}
+             className={`px-5 py-2.5 text-sm font-semibold rounded-lg transition-all ${
+               activeTab === 'financials' 
+                 ? 'bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-500/25' 
+                 : 'text-gray-600 hover:bg-gray-50'
+             }`}
+             whileHover={{ scale: 1.05 }}
+             whileTap={{ scale: 0.95 }}
            >
              Financials
-           </button>
+           </motion.button>
         </div>
       </div>
 
       {activeTab === 'overview' && (
         <>
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <Card className="p-6 bg-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Today's Sales</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-1">{stats?.todaySales}</p>
-                </div>
-                <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center text-primary-600">
-                  <ShoppingBag />
-                </div>
-              </div>
-            </Card>
-            <Card className="p-6 bg-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Pickup Rate</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-1">{stats?.pickupRate}%</p>
-                </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
-                  <TrendingUp />
-                </div>
-              </div>
-            </Card>
-            <Card className="p-6 bg-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Avg Rating</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-1">{stats?.avgRating}</p>
-                </div>
-                <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-600">
-                  <DollarSign />
-                </div>
-              </div>
-            </Card>
-            <Card className="p-6 bg-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Meals Saved</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-1">{stats?.totalMealsSaved}</p>
-                </div>
-                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-orange-600">
-                  <Leaf />
-                </div>
-              </div>
-            </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { 
+                label: "Today's Sales", 
+                value: stats?.todaySales || 0, 
+                icon: ShoppingBag, 
+                gradient: 'from-primary-500 to-primary-600',
+                bgGradient: 'from-primary-50 to-primary-100',
+                iconBg: 'bg-primary-100',
+                iconColor: 'text-primary-600'
+              },
+              { 
+                label: "Pickup Rate", 
+                value: `${stats?.pickupRate || 0}%`, 
+                icon: TrendingUp, 
+                gradient: 'from-blue-500 to-blue-600',
+                bgGradient: 'from-blue-50 to-blue-100',
+                iconBg: 'bg-blue-100',
+                iconColor: 'text-blue-600'
+              },
+              { 
+                label: "Avg Rating", 
+                value: stats?.avgRating || 0, 
+                icon: DollarSign, 
+                gradient: 'from-accent-500 to-accent-600',
+                bgGradient: 'from-accent-50 to-accent-100',
+                iconBg: 'bg-accent-100',
+                iconColor: 'text-accent-600'
+              },
+              { 
+                label: "Meals Saved", 
+                value: stats?.totalMealsSaved || 0, 
+                icon: Leaf, 
+                gradient: 'from-green-500 to-green-600',
+                bgGradient: 'from-green-50 to-green-100',
+                iconBg: 'bg-green-100',
+                iconColor: 'text-green-600'
+              },
+            ].map((stat, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <Card className={`p-6 bg-gradient-to-br ${stat.bgGradient} border-0 overflow-hidden relative`} hover>
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/20 to-transparent rounded-full -mr-16 -mt-16" />
+                  <div className="relative z-10 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-700 mb-2">{stat.label}</p>
+                      <p className="text-4xl font-bold text-gray-900">{stat.value}</p>
+                    </div>
+                    <div className={`w-14 h-14 rounded-2xl ${stat.iconBg} ${stat.iconColor} flex items-center justify-center shadow-lg`}>
+                      <stat.icon size={28} />
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
+            ))}
           </div>
 
           {/* Chart */}
           <div className="grid md:grid-cols-3 gap-6">
-            <Card className="md:col-span-2 p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-6">Sales History (Last 7 Days)</h3>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="md:col-span-2"
+            >
+              <Card className="p-8">
+                <h3 className="text-2xl font-bold text-gray-900 mb-8 tracking-tight">Sales History (Last 7 Days)</h3>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={stats?.salesHistory}>
@@ -109,8 +156,15 @@ const VendorDashboard: React.FC = () => {
                   </LineChart>
                 </ResponsiveContainer>
               </div>
-            </Card>
-             <Card className="md:col-span-1 p-6">
+              </Card>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="md:col-span-1"
+            >
+              <Card className="p-8">
                <h3 className="text-lg font-bold text-gray-900 mb-6">Bags Sold vs Offered</h3>
                <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
@@ -121,29 +175,52 @@ const VendorDashboard: React.FC = () => {
                   </BarChart>
                 </ResponsiveContainer>
                </div>
-            </Card>
+              </Card>
+            </motion.div>
           </div>
 
           {/* Quick Actions */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Link to="/vendor/bags">
-              <Card className="p-6 hover:border-primary-500 transition-colors group h-full">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-bold text-gray-900">Manage Bags</h3>
-                  <ArrowRight className="text-gray-400 group-hover:text-primary-500 transition-colors"/>
-                </div>
-                <p className="text-gray-500 mt-2">Update quantity or add new surprise bags for today.</p>
-              </Card>
-            </Link>
-            <Link to="/vendor/orders">
-              <Card className="p-6 hover:border-primary-500 transition-colors group h-full">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-bold text-gray-900">Incoming Orders</h3>
-                  <ArrowRight className="text-gray-400 group-hover:text-primary-500 transition-colors"/>
-                </div>
-                <p className="text-gray-500 mt-2">Check customer pickups and verify confirmation codes.</p>
-              </Card>
-            </Link>
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.6 }}
+            >
+              <Link to="/vendor/bags">
+                <Card className="p-8 group h-full" hover>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-gray-900">Manage Bags</h3>
+                    <motion.div
+                      whileHover={{ x: 4 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <ArrowRight className="text-gray-400 group-hover:text-primary-600 transition-colors" size={24} />
+                    </motion.div>
+                  </div>
+                  <p className="text-gray-600 leading-relaxed">Update quantity or add new surprise bags for today.</p>
+                </Card>
+              </Link>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.7 }}
+            >
+              <Link to="/vendor/orders">
+                <Card className="p-8 group h-full" hover>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-gray-900">Incoming Orders</h3>
+                    <motion.div
+                      whileHover={{ x: 4 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <ArrowRight className="text-gray-400 group-hover:text-primary-600 transition-colors" size={24} />
+                    </motion.div>
+                  </div>
+                  <p className="text-gray-600 leading-relaxed">Check customer pickups and verify confirmation codes.</p>
+                </Card>
+              </Link>
+            </motion.div>
           </div>
         </>
       )}
@@ -199,7 +276,7 @@ const VendorDashboard: React.FC = () => {
            </Card>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 };
 

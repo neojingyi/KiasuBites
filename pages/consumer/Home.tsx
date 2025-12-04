@@ -6,6 +6,7 @@ import { MapPin, Clock, Filter, Star, Search, Map as MapIcon, List, ShoppingBag 
 import { Link } from 'react-router-dom';
 import { SurpriseBag, Vendor } from '../../types';
 import { useAuth } from '../../context/AuthContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const SINGAPORE_BOUNDS = { minLat: 1.22, maxLat: 1.48, minLng: 103.6, maxLng: 104.1 };
 
@@ -252,58 +253,97 @@ const ConsumerHome: React.FC = () => {
 
       {/* Content Area */}
       {viewMode === 'list' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredBags?.map((bag: SurpriseBag) => (
-            <Link key={bag.id} to={`/consumer/bags/${bag.id}`}>
-              <Card className="h-full flex flex-col group relative hover:ring-2 ring-primary-500 ring-offset-2 transition-all">
-                <div className="relative h-48 bg-gray-200 overflow-hidden">
-                  <img 
-                    src={`https://picsum.photos/seed/${bag.vendorId}/500/300`} 
-                    alt={bag.title} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute top-3 left-3 flex gap-2">
-                     {bag.quantity < 3 && (
-                       <Badge variant="warning">Only {bag.quantity} left</Badge>
-                     )}
-                  </div>
-                </div>
-                <div className="p-4 flex flex-col flex-grow">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <h3 className="font-bold text-lg text-gray-900 line-clamp-1">{bag.vendorName}</h3>
-                      <p className="text-sm text-gray-500">{bag.vendorCategory}</p>
-                    </div>
-                    <div className="flex items-center bg-green-50 px-1.5 py-0.5 rounded text-xs font-bold text-green-700">
-                      4.8 <Star size={10} className="ml-0.5 fill-current" />
-                    </div>
-                  </div>
-                  
-                  <h4 className="font-medium text-gray-800 mb-2">{bag.title}</h4>
-                  
-                  <div className="flex items-center gap-2 mb-4 text-xs text-gray-500">
-                    <Clock size={14} />
-                    <span>Pickup {bag.pickupStart} - {bag.pickupEnd}</span>
-                  </div>
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          layout
+        >
+          <AnimatePresence mode="popLayout">
+            {filteredBags?.map((bag: SurpriseBag, index: number) => {
+              const vendor = vendors?.find((v: Vendor) => v.id === bag.vendorId);
+              const savings = ((bag.originalPrice - bag.price) / bag.originalPrice * 100).toFixed(0);
+              return (
+                <motion.div
+                  key={bag.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: -20 }}
+                  transition={{ 
+                    duration: 0.3,
+                    delay: index * 0.05,
+                    layout: { duration: 0.3 }
+                  }}
+                >
+                  <Link to={`/consumer/bags/${bag.id}`}>
+                    <Card className="h-full flex flex-col overflow-hidden" hover>
+                      <div className="relative h-56 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+                        <motion.img 
+                          src={vendor?.photoUrl || `https://picsum.photos/seed/${bag.vendorId}/500/300`} 
+                          alt={bag.title} 
+                          className="w-full h-full object-cover"
+                          whileHover={{ scale: 1.1 }}
+                          transition={{ duration: 0.4 }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                        <div className="absolute top-4 left-4 flex gap-2">
+                          {bag.quantity < 3 && (
+                            <Badge variant="warning">Only {bag.quantity} left</Badge>
+                          )}
+                        </div>
+                        <div className="absolute top-4 right-4">
+                          <Badge variant="success">{savings}% off</Badge>
+                        </div>
+                      </div>
+                      <div className="p-5 flex flex-col flex-grow">
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-lg text-gray-900 line-clamp-1 mb-1">{bag.vendorName}</h3>
+                            <p className="text-sm text-gray-500 font-medium">{bag.vendorCategory}</p>
+                          </div>
+                          <div className="flex items-center bg-gradient-to-br from-green-50 to-green-100 px-2.5 py-1 rounded-lg text-xs font-bold text-green-700 border border-green-200 ml-2">
+                            4.8 <Star size={10} className="ml-1 fill-current" />
+                          </div>
+                        </div>
+                        
+                        <h4 className="font-semibold text-gray-800 mb-3 text-base line-clamp-2">{bag.title}</h4>
+                        
+                        <div className="flex items-center gap-2 mb-4 text-xs text-gray-500">
+                          <Clock size={14} className="text-gray-400" />
+                          <span className="font-medium">Pickup {bag.pickupStart} - {bag.pickupEnd}</span>
+                        </div>
 
-                  <div className="mt-auto flex items-center justify-between pt-3 border-t border-gray-100">
-                    <div>
-                      <span className="text-lg font-bold text-primary-700">${bag.price.toFixed(2)}</span>
-                      <span className="text-sm text-gray-400 line-through ml-2">${bag.originalPrice.toFixed(2)}</span>
-                    </div>
-                    <Button size="sm" variant="secondary">View</Button>
-                  </div>
-                </div>
-              </Card>
-            </Link>
-          ))}
+                        <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-100">
+                          <div>
+                            <div className="flex items-baseline gap-2">
+                              <span className="text-2xl font-bold text-primary-700">${bag.price.toFixed(2)}</span>
+                              <span className="text-sm text-gray-400 line-through">${bag.originalPrice.toFixed(2)}</span>
+                            </div>
+                            <p className="text-xs text-green-600 font-semibold mt-1">Save ${(bag.originalPrice - bag.price).toFixed(2)}</p>
+                          </div>
+                          <Button size="sm" variant="secondary">View</Button>
+                        </div>
+                      </div>
+                    </Card>
+                  </Link>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
 
           {filteredBags?.length === 0 && (
-            <div className="col-span-full text-center py-20 text-gray-500">
-              No bags found with current filters.
-            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="col-span-full text-center py-20"
+            >
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                <ShoppingBag className="text-gray-400" size={32} />
+              </div>
+              <p className="text-lg font-semibold text-gray-900 mb-2">No bags found</p>
+              <p className="text-gray-500">Try adjusting your filters to see more options.</p>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
       ) : (
         <SingaporeMapView bags={filteredBags || []} vendors={vendors || []} />
       )}

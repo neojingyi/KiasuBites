@@ -10,6 +10,7 @@ A modern food rescue platform that connects consumers with local vendors to save
 - **Favorites**: Save your favorite vendors for quick access
 - **Order Management**: Track your orders and pickup times
 - **Profile Customization**: Set dietary preferences and search radius
+- **Interactive 3D Globe**: Explore vendors on an interactive 3D globe map with auto-rotation and theme switching
 
 ### For Vendors
 - **Dashboard Analytics**: Track sales, revenue, and meals saved
@@ -37,6 +38,7 @@ A modern food rescue platform that connects consumers with local vendors to save
 - **Icons**: Lucide React
 - **Charts**: Recharts
 - **Notifications**: React Hot Toast
+- **3D Globe**: Mapbox GL JS 3.15.0
 
 ## 📋 Prerequisites
 
@@ -58,9 +60,15 @@ A modern food rescue platform that connects consumers with local vendors to save
    npm install
    ```
 
-3. Set up environment variables (if needed):
+3. Set up environment variables:
    Create a `.env.local` file and add:
    ```env
+   # Mapbox Access Token (required for 3D Globe feature)
+   # Get your free token at https://account.mapbox.com
+   # Free tier: 50,000 map loads per month
+   VITE_MAPBOX_ACCESS_TOKEN=pk.your_token_here
+   
+   # Gemini API Key (if using AI features)
    GEMINI_API_KEY=your_api_key_here
    ```
 

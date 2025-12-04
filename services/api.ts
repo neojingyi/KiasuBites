@@ -1,4 +1,7 @@
 import { User, Vendor, SurpriseBag, Order, UserRole, VendorStats, WeeklyAvailability, VendorBusinessInfo, VendorSettings } from '../types';
+import pastriesPic from '../assets/pastries_pic.jpg';
+import sushiroPic from '../assets/sushiro.png';
+import saladPic from '../assets/salad_pic.jpg';
 
 // Initial Mock Data
 const MOCK_VENDORS: Vendor[] = [
@@ -12,7 +15,7 @@ const MOCK_VENDORS: Vendor[] = [
     rating: 4.8,
     totalReviews: 120,
     tags: ['Vegetarian', 'Halal-Friendly'],
-    photoUrl: 'https://picsum.photos/400/300?random=1',
+    photoUrl: pastriesPic,
     pickupInstructions: 'Show code at counter.',
     availability: {
       mon: { available: true, pickupStart: '18:00', pickupEnd: '19:00', defaultQuantity: 5 },
@@ -34,7 +37,7 @@ const MOCK_VENDORS: Vendor[] = [
     rating: 4.5,
     totalReviews: 85,
     tags: ['Seafood', 'Rice'],
-    photoUrl: 'https://picsum.photos/400/300?random=2',
+    photoUrl: sushiroPic,
     pickupInstructions: 'Enter from side door after 9pm.'
   },
   {
@@ -47,7 +50,7 @@ const MOCK_VENDORS: Vendor[] = [
     rating: 4.2,
     totalReviews: 45,
     tags: ['Vegan', 'Healthy', 'Gluten-Free'],
-    photoUrl: 'https://picsum.photos/400/300?random=3',
+    photoUrl: saladPic,
     pickupInstructions: 'Collect at the cashier.'
   }
 ];
@@ -114,8 +117,28 @@ const KEYS = {
 };
 
 const initStorage = () => {
-  if (!localStorage.getItem(KEYS.VENDORS)) {
+  // Always update vendors to ensure latest images are used
+  const existingVendors = localStorage.getItem(KEYS.VENDORS);
+  if (!existingVendors) {
     localStorage.setItem(KEYS.VENDORS, JSON.stringify(MOCK_VENDORS));
+  } else {
+    // Always update existing vendors with new photoUrls to ensure images are current
+    const vendors = JSON.parse(existingVendors);
+    const updatedVendors = vendors.map((v: Vendor) => {
+      const mockVendor = MOCK_VENDORS.find(mv => mv.id === v.id);
+      if (mockVendor) {
+        // Always update photoUrl from mock data
+        return { ...v, photoUrl: mockVendor.photoUrl };
+      }
+      return v;
+    });
+    // Also add any new vendors from MOCK_VENDORS that don't exist
+    MOCK_VENDORS.forEach(mockVendor => {
+      if (!updatedVendors.find((v: Vendor) => v.id === mockVendor.id)) {
+        updatedVendors.push(mockVendor);
+      }
+    });
+    localStorage.setItem(KEYS.VENDORS, JSON.stringify(updatedVendors));
   }
   if (!localStorage.getItem(KEYS.BAGS)) {
     localStorage.setItem(KEYS.BAGS, JSON.stringify(MOCK_BAGS));
@@ -160,7 +183,7 @@ export const api = {
     if (!user || user.role !== role) {
        user = {
         id: role === UserRole.VENDOR ? 'v1' : 'c1',
-        name: role === UserRole.VENDOR ? 'Bread & Butter Bakery' : 'Alex Tan',
+        name: role === UserRole.VENDOR ? 'Bread & Butter Bakery' : 'Alex Wang',
         email,
         role,
         dietaryPreferences: [],

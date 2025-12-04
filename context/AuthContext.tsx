@@ -4,7 +4,7 @@ import { api } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, role: UserRole) => Promise<void>;
+  login: (email: string, role: UserRole) => Promise<User>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -23,11 +23,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(false);
   }, []);
 
-  const login = async (email: string, role: UserRole) => {
+  const login = async (email: string, role: UserRole): Promise<User> => {
     setIsLoading(true);
     try {
       const loggedInUser = await api.login(email, role);
       setUser(loggedInUser);
+      return loggedInUser;
     } catch (error) {
       console.error("Login failed", error);
       throw error;
