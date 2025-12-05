@@ -231,6 +231,16 @@ const Layout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
                       Profile
                     </NavbarButton>
                   )}
+                  {user.role === "vendor" && (
+                    <NavbarButton
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      variant="secondary"
+                      className="w-full"
+                      to="/vendor/settings"
+                    >
+                      Settings
+                    </NavbarButton>
+                  )}
                   <button
                     onClick={() => {
                       setShowLogoutConfirm(true);
