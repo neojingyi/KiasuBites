@@ -4,6 +4,8 @@ import { useAuth } from '../../context/AuthContext';
 import { Button, Input, Card } from '../../components/UI';
 import { UserRole } from '../../types';
 import toast from 'react-hot-toast';
+import { ShoppingBag, Store } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const Login: React.FC = () => {
   const [step, setStep] = useState<'role' | 'credentials'>('role');
@@ -75,22 +77,44 @@ const Login: React.FC = () => {
         {step === 'role' ? (
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3 text-center">I am a</label>
-              <div className="grid grid-cols-2 gap-4">
-                <button
+              <label className="block text-lg font-semibold text-gray-900 mb-6 text-center">I am a</label>
+              <div className="grid grid-cols-1 gap-4">
+                <motion.button
                   type="button"
-                  className="py-4 px-6 rounded-xl border-2 text-base font-medium bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-primary-500 transition-all"
+                  className="group relative py-6 px-6 rounded-2xl border-2 text-left bg-white border-gray-200 hover:border-primary-500 transition-all duration-200 overflow-hidden"
                   onClick={() => handleRoleSelect(UserRole.CONSUMER)}
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  Consumer
-                </button>
-                <button
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary-50/0 to-primary-50/0 group-hover:from-primary-50 group-hover:to-primary-100/50 transition-all duration-200" />
+                  <div className="relative flex flex-col items-start gap-3">
+                    <div className="p-3 rounded-xl bg-primary-100 group-hover:bg-primary-200 transition-colors">
+                      <ShoppingBag className="w-6 h-6 text-primary-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 mb-1">Consumer</h3>
+                      <p className="text-sm text-gray-600">Browse and buy surprise bags</p>
+                    </div>
+                  </div>
+                </motion.button>
+                <motion.button
                   type="button"
-                  className="py-4 px-6 rounded-xl border-2 text-base font-medium bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-primary-500 transition-all"
+                  className="group relative py-6 px-6 rounded-2xl border-2 text-left bg-white border-gray-200 hover:border-primary-500 transition-all duration-200 overflow-hidden"
                   onClick={() => handleRoleSelect(UserRole.VENDOR)}
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  Vendor
-                </button>
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary-50/0 to-primary-50/0 group-hover:from-primary-50 group-hover:to-primary-100/50 transition-all duration-200" />
+                  <div className="relative flex flex-col items-start gap-3">
+                    <div className="p-3 rounded-xl bg-primary-100 group-hover:bg-primary-200 transition-colors">
+                      <Store className="w-6 h-6 text-primary-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 mb-1">Vendor</h3>
+                      <p className="text-sm text-gray-600">Sell surplus food bags</p>
+                    </div>
+                  </div>
+                </motion.button>
               </div>
             </div>
           </div>

@@ -1,18 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { Button, Card, Input } from '../../components/UI';
 import { WeeklyAvailability } from '../../types';
 import toast from 'react-hot-toast';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import ImpactCalculator from '../../components/ImpactCalculator';
 
 const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 const LABELS: {[key: string]: string} = { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' };
 
 const VendorAvailability: React.FC = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   
-  // Initialize with default or empty
+  // Fetch existing schedule
+  const { data: vendorData } = useQuery({
+    queryKey: ['vendor', user?.id],
+    queryFn: async () => {
+      const vendors = JSON.parse(localStorage.getItem('kiasubites_vendors') || '[]');
+      return vendors.find((v: any) => v.id === user?.id);
+    },
+    enabled: !!user
+  });
+
+  // Initialize with vendor's existing schedule or defaults
   const [schedule, setSchedule] = useState<WeeklyAvailability>(
     DAYS.reduce((acc, day) => ({ 
       ...acc, 
@@ -20,10 +32,19 @@ const VendorAvailability: React.FC = () => {
     }), {})
   );
 
-  // In a real app, fetch existing schedule first
+  // Update schedule when vendor data loads
+  useEffect(() => {
+    if (vendorData?.availability) {
+      setSchedule(vendorData.availability);
+    }
+  }, [vendorData]);
+
   const mutation = useMutation({
     mutationFn: (data: WeeklyAvailability) => api.updateVendorAvailability(user!.id, data),
-    onSuccess: () => toast.success('Weekly schedule updated!')
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vendor'] });
+      toast.success('Weekly schedule updated!');
+    }
   });
 
   const handleChange = (day: string, field: string, value: any) => {
@@ -100,6 +121,15 @@ const VendorAvailability: React.FC = () => {
           ))}
         </div>
       </Card>
+
+      {/* Impact Calculator */}
+      <ImpactCalculator 
+        availability={schedule}
+        onScheduleUpdate={(updatedAvailability) => {
+          setSchedule(updatedAvailability);
+          queryClient.invalidateQueries({ queryKey: ['vendor'] });
+        }}
+      />
     </div>
   );
 };

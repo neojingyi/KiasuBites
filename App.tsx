@@ -26,6 +26,7 @@ import VendorAvailability from './pages/vendor/Availability';
 import VendorReviews from './pages/vendor/Reviews';
 import VendorTips from './pages/vendor/Tips';
 import VendorSettings from './pages/vendor/Settings';
+import VendorFinancials from './pages/vendor/Financials';
 
 import Layout from './components/Layout';
 
@@ -78,6 +79,7 @@ const App: React.FC = () => {
               <Route path="reviews" element={<VendorReviews />} />
               <Route path="tips" element={<VendorTips />} />
               <Route path="settings" element={<VendorSettings />} />
+              <Route path="financials" element={<VendorFinancials />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />
@@ -88,27 +90,24 @@ const App: React.FC = () => {
           toastOptions={{
             className: '',
             style: {
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
+              background: '#ffffff',
               color: '#1d1d1f',
               borderRadius: '16px',
               padding: '14px 20px',
               fontSize: '15px',
               fontWeight: '500',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08)',
-              border: '0.5px solid rgba(0, 0, 0, 0.08)',
-              fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+              border: '1px solid rgba(0, 0, 0, 0.1)',
+              fontFamily: "'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
             },
             success: {
               iconTheme: {
-                primary: '#dc2626',
+                primary: '#ef4444',
                 secondary: '#ffffff',
               },
             },
             error: {
               iconTheme: {
-                primary: '#dc2626',
+                primary: '#ef4444',
                 secondary: '#ffffff',
               },
             },

@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, UserRole } from '../types';
-import { api } from '../services/api';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { User, UserRole } from "../types";
+import { api } from "../services/api";
 
 interface AuthContextType {
   user: User | null;
@@ -11,17 +11,14 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    const storedUser = api.getCurrentUser();
-    if (storedUser) {
-      setUser(storedUser);
-    }
-    setIsLoading(false);
-  }, []);
+  // No auto-login - user must explicitly log in
+  // Removed localStorage restore to ensure app starts with no user logged in
 
   const login = async (email: string, role: UserRole): Promise<User> => {
     setIsLoading(true);
@@ -52,7 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

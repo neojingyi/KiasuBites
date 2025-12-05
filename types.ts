@@ -1,6 +1,6 @@
 export enum UserRole {
-  CONSUMER = 'consumer',
-  VENDOR = 'vendor'
+  CONSUMER = "consumer",
+  VENDOR = "vendor",
 }
 
 export interface User {
@@ -28,7 +28,8 @@ export interface VendorBusinessInfo {
 }
 
 export interface WeeklyAvailability {
-  [key: string]: { // mon, tue, wed, etc.
+  [key: string]: {
+    // mon, tue, wed, etc.
     available: boolean;
     pickupStart: string;
     pickupEnd: string;
@@ -63,18 +64,19 @@ export interface Vendor {
 export interface SurpriseBag {
   id: string;
   vendorId: string;
-  vendorName: string; 
+  vendorName: string;
   vendorCategory: string;
   title: string;
   description: string;
   price: number;
   originalPrice: number;
-  pickupStart: string; 
+  pickupStart: string;
   pickupEnd: string;
   quantity: number;
   dietaryTags: string[];
-  status: 'active' | 'sold_out' | 'inactive';
-  category?: 'Meals' | 'Bread & Pastries' | 'Groceries' | 'Dessert' | 'Other'; 
+  status: "active" | "sold_out" | "inactive";
+  category?: "Meals" | "Bread & Pastries" | "Groceries" | "Dessert" | "Other";
+  imageUrl?: string; // Image URL for the surprise bag
 }
 
 export interface Order {
@@ -87,7 +89,7 @@ export interface Order {
   quantity: number;
   totalPrice: number;
   estimatedValue: number; // For savings calculation
-  status: 'reserved' | 'picked_up' | 'cancelled' | 'no_show';
+  status: "reserved" | "picked_up" | "cancelled" | "no_show";
   pickupStart: string;
   pickupEnd: string;
   createdAt: string;
@@ -103,5 +105,103 @@ export interface VendorStats {
   pickupRate: number;
   avgRating: number;
   salesHistory: { date: string; amount: number; bagsSold: number }[];
-  payouts: { date: string; period: string; gross: number; fees: number; net: number; status: 'Paid' | 'Upcoming' }[];
+  payouts: {
+    date: string;
+    period: string;
+    gross: number;
+    fees: number;
+    net: number;
+    status: "Paid" | "Upcoming";
+  }[];
+}
+
+// Financial Types
+export interface PayoutOverview {
+  currentAccrued: number;
+  payoutCycle: "Monthly";
+  minimumThreshold: number;
+  nextPayoutDate: string;
+  payoutMethod?: PayoutMethod;
+}
+
+export interface PayoutMethod {
+  id: string;
+  type: "bank_account";
+  bankName: string;
+  accountNumber: string; // Last 4 digits only for display
+  accountHolderName: string;
+  isDefault: boolean;
+}
+
+export interface MonthlyStatement {
+  month: number;
+  year: number;
+  totalOrders: number;
+  totalRevenue: number;
+  platformFees: number;
+  netPayout: number;
+  status: "pending" | "processing" | "paid";
+}
+
+export interface DailyInvoice {
+  orderId: string;
+  date: string;
+  productType: string;
+  totalAmount: number;
+  invoiceUrl?: string;
+  creditNoteUrl?: string;
+}
+
+export interface PartnerDetails {
+  businessName: string;
+  address: string;
+  postalCode: string;
+  city: string;
+  country: string;
+  invoiceEmail: string;
+}
+
+export interface EmailSettings {
+  enabled: boolean;
+  includeAccountStatements: boolean;
+  includeOrderSummaries: boolean;
+  includeInvoices: boolean;
+  includeSelfBillingInvoices: boolean;
+}
+
+export interface LegalDocument {
+  id: string;
+  name: string;
+  url: string;
+  type: "terms" | "commercial_terms" | "cookie_policy" | "privacy_policy";
+}
+
+// Impact Calculator Types
+export interface ImpactConfig {
+  moneySavedPerBag: number; // Currency amount saved per bag
+  co2eSavedPerBagKg: number; // kg of CO2e avoided per bag
+  hoursOfShowersPerKgCo2e: number; // Equivalent hours of hot showers per kg CO2e
+  sliderMin: number; // Minimum extra bags per day
+  sliderMax: number; // Maximum extra bags per day
+  currency: string; // Currency code (e.g., 'SGD', 'GBP', 'USD')
+}
+
+export interface ImpactEstimate {
+  baseBagsPerDay: number;
+  extraBagsPerDay: number;
+  totalBagsPerDay: number;
+  bagsPerYear: number;
+  moneySavedPerYear: number;
+  co2eAvoidedPerYearKg: number;
+  hoursOfHotShowers: number;
+  config: ImpactConfig;
+}
+
+export interface ImpactPreviewRequest {
+  extraBagsPerDay: number;
+}
+
+export interface UpdateScheduleFromImpactRequest {
+  extraBagsPerDay: number;
+  totalBagsPerDay: number;
 }
