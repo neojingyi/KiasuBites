@@ -15,11 +15,11 @@ export const Button: React.FC<ButtonProps> = ({
   const baseStyles = "inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed relative";
   
   const variants = {
-    primary: "bg-gradient-to-b from-primary-600 to-primary-700 text-white hover:from-primary-700 hover:to-primary-800 focus:ring-primary-500 shadow-lg shadow-primary-500/25 border border-primary-700/50",
-    secondary: "bg-gradient-to-b from-primary-50 to-primary-100 text-primary-700 hover:from-primary-100 hover:to-primary-200 focus:ring-primary-500 shadow-sm border border-primary-200",
-    outline: "border-2 border-gray-300 bg-white/80 backdrop-blur-sm hover:bg-gray-50 hover:border-gray-400 text-gray-700 shadow-sm",
-    ghost: "bg-transparent hover:bg-gray-100/80 text-gray-700",
-    danger: "bg-gradient-to-b from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 focus:ring-red-500 shadow-lg shadow-red-500/25 border border-red-700/50",
+    primary: "bg-gradient-to-b from-primary-600 to-primary-700 text-white focus:ring-primary-500 border border-primary-700/50",
+    secondary: "bg-gradient-to-b from-primary-50 to-primary-100 text-primary-700 focus:ring-primary-500 border border-primary-200",
+    outline: "border-2 border-gray-300 bg-white/80 backdrop-blur-sm text-gray-700",
+    ghost: "bg-transparent text-gray-700",
+    danger: "bg-gradient-to-b from-red-600 to-red-700 text-white focus:ring-red-500 border border-red-700/50",
   };
 
   const sizes = {
@@ -30,24 +30,25 @@ export const Button: React.FC<ButtonProps> = ({
 
   const buttonClasses = `${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`;
 
+  const shadowStyle = variant === 'primary' || variant === 'danger'
+    ? '0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)'
+    : '0 1px 2px rgba(0, 0, 0, 0.05)';
+
   return (
     <motion.button 
       className={buttonClasses}
       disabled={disabled || isLoading}
       whileHover={{ 
-        y: -2,
-        scale: 1.02,
-        transition: { duration: 0.2, ease: "easeOut" }
+        y: -1,
+        transition: { duration: 0.15, ease: "easeOut" }
       }}
       whileTap={{ 
-        y: 0,
-        scale: 0.98,
+        y: 1,
+        scale: 0.97,
         transition: { duration: 0.1 }
       }}
       style={{
-        boxShadow: variant === 'primary' || variant === 'danger' 
-          ? '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)' 
-          : '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
+        boxShadow: shadowStyle
       }}
       {...props}
     >

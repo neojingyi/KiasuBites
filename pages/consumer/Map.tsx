@@ -62,14 +62,21 @@ const Map: React.FC = () => {
           lng: vendor.lng,
           lat: vendor.lat,
           title: `${vendor.name} - ${bagCount} bag${bagCount > 1 ? 's' : ''} from $${minPrice.toFixed(2)}`,
-          color: '#dc2626', // Red theme color
+          color: '#10b981', // Green color
+          count: bagCount,
+          bags: vendorBags.map((bag: SurpriseBag) => ({
+            id: bag.id,
+            title: bag.title,
+            price: bag.price,
+            vendorName: vendor.name,
+            vendorAddress: vendor.address,
+          })),
         };
       });
   }, [vendors, bags]);
 
   const handleLocationClick = (location: LocationData) => {
     setSelectedLocation(location);
-    toast.success(`Clicked: ${location.name}`);
   };
 
   return (

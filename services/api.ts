@@ -9,8 +9,8 @@ const MOCK_VENDORS: Vendor[] = [
     id: 'v1',
     name: 'Bread & Butter Bakery',
     address: '123 Tanjong Pagar Rd',
-    lat: 1.2764,
-    lng: 103.8446,
+    lat: 1.3100,
+    lng: 103.9200, // East - Simei
     category: 'Bakery',
     rating: 4.8,
     totalReviews: 120,
@@ -32,7 +32,7 @@ const MOCK_VENDORS: Vendor[] = [
     name: 'Sushi Zen',
     address: '45 Orchard Blvd',
     lat: 1.3048,
-    lng: 103.8318,
+    lng: 103.8318, // Central - Orchard
     category: 'Japanese',
     rating: 4.5,
     totalReviews: 85,
@@ -44,14 +44,131 @@ const MOCK_VENDORS: Vendor[] = [
     id: 'v3',
     name: 'Daily Green Salad',
     address: '10 Raffles Place',
-    lat: 1.2830,
-    lng: 103.8510,
+    lat: 1.2630,
+    lng: 103.8210, // South - Harbourfront
     category: 'Restaurant',
     rating: 4.2,
     totalReviews: 45,
     tags: ['Vegan', 'Healthy', 'Gluten-Free'],
     photoUrl: saladPic,
     pickupInstructions: 'Collect at the cashier.'
+  },
+  {
+    id: 'v4',
+    name: 'Golden Wok',
+    address: '78 Marina Bay Link',
+    lat: 1.3550,
+    lng: 103.9450, // East - Tampines
+    category: 'Chinese',
+    rating: 4.6,
+    totalReviews: 156,
+    tags: ['Vegetarian', 'Halal-Friendly'],
+    photoUrl: pastriesPic,
+    pickupInstructions: 'Back entrance, ring bell.'
+  },
+  {
+    id: 'v5',
+    name: 'Spice Route',
+    address: '22 Little India Arcade',
+    lat: 1.4269,
+    lng: 103.8403, // North - Woodlands
+    category: 'Indian',
+    rating: 4.7,
+    totalReviews: 203,
+    tags: ['Vegetarian', 'Halal-Friendly'],
+    photoUrl: saladPic,
+    pickupInstructions: 'Main counter, show confirmation.'
+  },
+  {
+    id: 'v6',
+    name: 'K-BBQ Express',
+    address: '15 Orchard Road',
+    lat: 1.3230,
+    lng: 103.9300, // East - Bedok
+    category: 'Korean',
+    rating: 4.4,
+    totalReviews: 98,
+    tags: ['Meat', 'Rice'],
+    photoUrl: sushiroPic,
+    pickupInstructions: 'Side door after 8pm.'
+  },
+  {
+    id: 'v7',
+    name: 'Pasta Paradise',
+    address: '88 Robertson Quay',
+    lat: 1.3305,
+    lng: 103.7764, // West - Clementi
+    category: 'Italian',
+    rating: 4.5,
+    totalReviews: 127,
+    tags: ['Vegetarian', 'Gluten-Free'],
+    photoUrl: pastriesPic,
+    pickupInstructions: 'Kitchen entrance, call ahead.'
+  },
+  {
+    id: 'v8',
+    name: 'Sweet Dreams Desserts',
+    address: '5 Clarke Quay',
+    lat: 1.3400,
+    lng: 103.9800, // East - Changi
+    category: 'Dessert',
+    rating: 4.8,
+    totalReviews: 189,
+    tags: ['Vegetarian', 'Halal-Friendly'],
+    photoUrl: saladPic,
+    pickupInstructions: 'Front counter, mention KiasuBites.'
+  },
+  {
+    id: 'v9',
+    name: 'Fresh Market Co',
+    address: '33 Tiong Bahru Plaza',
+    lat: 1.3256,
+    lng: 103.7425, // West - Jurong East
+    category: 'Groceries',
+    rating: 4.3,
+    totalReviews: 67,
+    tags: ['Vegetarian', 'Vegan', 'Organic'],
+    photoUrl: pastriesPic,
+    pickupInstructions: 'Customer service desk.'
+  },
+  {
+    id: 'v10',
+    name: 'Burger Junction',
+    address: '12 Holland Village',
+    lat: 1.3117,
+    lng: 103.7958, // West - Holland Village
+    category: 'Fast Food',
+    rating: 4.1,
+    totalReviews: 92,
+    tags: ['Meat', 'Vegetarian'],
+    photoUrl: sushiroPic,
+    pickupInstructions: 'Drive-thru or counter pickup.'
+  },
+  {
+    id: 'v11',
+    name: 'Tea Time Bakery',
+    address: '67 Jurong West',
+    lat: 1.3456,
+    lng: 103.7056, // Far West - Jurong
+    category: 'Bakery',
+    rating: 4.6,
+    totalReviews: 134,
+    tags: ['Vegetarian', 'Halal-Friendly'],
+    photoUrl: pastriesPic,
+    pickupInstructions: 'Back counter after 7pm.'
+  },
+  {
+    id: 'v12',
+    name: 'Noodle House',
+    address: '29 Chinatown Point',
+    lat: 1.3650,
+    lng: 103.9550, // East - Pasir Ris
+    category: 'Chinese',
+    rating: 4.4,
+    totalReviews: 178,
+    tags: ['Vegetarian', 'Halal-Friendly'],
+    photoUrl: saladPic,
+    pickupInstructions: 'Main entrance, show code.'
   }
 ];
 
@@ -103,6 +220,214 @@ const MOCK_BAGS: SurpriseBag[] = [
     dietaryTags: ['Vegan', 'Gluten-Free'],
     status: 'active',
     category: 'Meals'
+  },
+  {
+    id: 'b4',
+    vendorId: 'v1',
+    vendorName: 'Bread & Butter Bakery',
+    vendorCategory: 'Bakery',
+    title: 'Morning Bread Bundle',
+    description: 'Assorted fresh breads and rolls.',
+    price: 4.50,
+    originalPrice: 12.00,
+    pickupStart: '19:00',
+    pickupEnd: '20:30',
+    quantity: 6,
+    dietaryTags: ['Vegetarian'],
+    status: 'active',
+    category: 'Bread & Pastries'
+  },
+  {
+    id: 'b5',
+    vendorId: 'v4',
+    vendorName: 'Golden Wok',
+    vendorCategory: 'Chinese',
+    title: 'Dim Sum Surprise',
+    description: 'Mixed dim sum selection.',
+    price: 7.50,
+    originalPrice: 18.00,
+    pickupStart: '20:00',
+    pickupEnd: '21:00',
+    quantity: 4,
+    dietaryTags: ['Vegetarian'],
+    status: 'active',
+    category: 'Meals'
+  },
+  {
+    id: 'b6',
+    vendorId: 'v5',
+    vendorName: 'Spice Route',
+    vendorCategory: 'Indian',
+    title: 'Curry Combo',
+    description: 'Assorted curries with rice and naan.',
+    price: 8.00,
+    originalPrice: 20.00,
+    pickupStart: '21:00',
+    pickupEnd: '22:00',
+    quantity: 5,
+    dietaryTags: ['Vegetarian'],
+    status: 'active',
+    category: 'Meals'
+  },
+  {
+    id: 'b7',
+    vendorId: 'v6',
+    vendorName: 'K-BBQ Express',
+    vendorCategory: 'Korean',
+    title: 'Korean BBQ Set',
+    description: 'Marinated meats with banchan sides.',
+    price: 9.50,
+    originalPrice: 24.00,
+    pickupStart: '21:30',
+    pickupEnd: '22:30',
+    quantity: 3,
+    dietaryTags: ['Meat'],
+    status: 'active',
+    category: 'Meals'
+  },
+  {
+    id: 'b8',
+    vendorId: 'v7',
+    vendorName: 'Pasta Paradise',
+    vendorCategory: 'Italian',
+    title: 'Pasta Variety Pack',
+    description: 'Mixed pasta dishes with sauces.',
+    price: 7.00,
+    originalPrice: 16.00,
+    pickupStart: '20:30',
+    pickupEnd: '21:30',
+    quantity: 6,
+    dietaryTags: ['Vegetarian'],
+    status: 'active',
+    category: 'Meals'
+  },
+  {
+    id: 'b9',
+    vendorId: 'v8',
+    vendorName: 'Sweet Dreams Desserts',
+    vendorCategory: 'Dessert',
+    title: 'Dessert Sampler',
+    description: 'Assorted cakes, cookies, and pastries.',
+    price: 5.50,
+    originalPrice: 13.00,
+    pickupStart: '19:00',
+    pickupEnd: '20:00',
+    quantity: 7,
+    dietaryTags: ['Vegetarian'],
+    status: 'active',
+    category: 'Dessert'
+  },
+  {
+    id: 'b10',
+    vendorId: 'v9',
+    vendorName: 'Fresh Market Co',
+    vendorCategory: 'Groceries',
+    title: 'Fresh Produce Box',
+    description: 'Mixed vegetables and fruits.',
+    price: 6.50,
+    originalPrice: 15.00,
+    pickupStart: '18:00',
+    pickupEnd: '19:00',
+    quantity: 10,
+    dietaryTags: ['Vegetarian', 'Vegan'],
+    status: 'active',
+    category: 'Groceries'
+  },
+  {
+    id: 'b11',
+    vendorId: 'v10',
+    vendorName: 'Burger Junction',
+    vendorCategory: 'Fast Food',
+    title: 'Burger Combo Pack',
+    description: 'Assorted burgers and sides.',
+    price: 8.50,
+    originalPrice: 21.00,
+    pickupStart: '21:00',
+    pickupEnd: '22:00',
+    quantity: 4,
+    dietaryTags: ['Meat'],
+    status: 'active',
+    category: 'Meals'
+  },
+  {
+    id: 'b12',
+    vendorId: 'v11',
+    vendorName: 'Tea Time Bakery',
+    vendorCategory: 'Bakery',
+    title: 'Afternoon Tea Set',
+    description: 'Scones, sandwiches, and pastries.',
+    price: 6.00,
+    originalPrice: 14.00,
+    pickupStart: '17:00',
+    pickupEnd: '18:00',
+    quantity: 5,
+    dietaryTags: ['Vegetarian'],
+    status: 'active',
+    category: 'Bread & Pastries'
+  },
+  {
+    id: 'b13',
+    vendorId: 'v12',
+    vendorName: 'Noodle House',
+    vendorCategory: 'Chinese',
+    title: 'Noodle Variety Pack',
+    description: 'Mixed noodle dishes.',
+    price: 7.00,
+    originalPrice: 17.00,
+    pickupStart: '20:00',
+    pickupEnd: '21:00',
+    quantity: 6,
+    dietaryTags: ['Vegetarian'],
+    status: 'active',
+    category: 'Meals'
+  },
+  {
+    id: 'b14',
+    vendorId: 'v2',
+    vendorName: 'Sushi Zen',
+    vendorCategory: 'Japanese',
+    title: 'Sashimi Selection',
+    description: 'Fresh sashimi platter.',
+    price: 12.00,
+    originalPrice: 28.00,
+    pickupStart: '22:00',
+    pickupEnd: '23:00',
+    quantity: 2,
+    dietaryTags: ['Seafood'],
+    status: 'active',
+    category: 'Meals'
+  },
+  {
+    id: 'b15',
+    vendorId: 'v4',
+    vendorName: 'Golden Wok',
+    vendorCategory: 'Chinese',
+    title: 'Rice Bowl Mix',
+    description: 'Various rice bowl combinations.',
+    price: 6.50,
+    originalPrice: 15.00,
+    pickupStart: '19:30',
+    pickupEnd: '20:30',
+    quantity: 7,
+    dietaryTags: ['Vegetarian'],
+    status: 'active',
+    category: 'Meals'
+  },
+  {
+    id: 'b16',
+    vendorId: 'v8',
+    vendorName: 'Sweet Dreams Desserts',
+    vendorCategory: 'Dessert',
+    title: 'Cake Slice Collection',
+    description: 'Assorted cake slices.',
+    price: 5.00,
+    originalPrice: 12.00,
+    pickupStart: '18:30',
+    pickupEnd: '19:30',
+    quantity: 8,
+    dietaryTags: ['Vegetarian'],
+    status: 'active',
+    category: 'Dessert'
   }
 ];
 
@@ -122,26 +447,51 @@ const initStorage = () => {
   if (!existingVendors) {
     localStorage.setItem(KEYS.VENDORS, JSON.stringify(MOCK_VENDORS));
   } else {
-    // Always update existing vendors with new photoUrls to ensure images are current
-    const vendors = JSON.parse(existingVendors);
-    const updatedVendors = vendors.map((v: Vendor) => {
-      const mockVendor = MOCK_VENDORS.find(mv => mv.id === v.id);
-      if (mockVendor) {
-        // Always update photoUrl from mock data
-        return { ...v, photoUrl: mockVendor.photoUrl };
-      }
-      return v;
-    });
-    // Also add any new vendors from MOCK_VENDORS that don't exist
+    // Always update existing vendors with latest data (photoUrl, coordinates, etc.)
+    const vendors: Vendor[] = JSON.parse(existingVendors);
+    const vendorMap = new Map<string, Vendor>(vendors.map((v: Vendor) => [v.id, v]));
+    
+    // Update existing vendors and add new ones
     MOCK_VENDORS.forEach(mockVendor => {
-      if (!updatedVendors.find((v: Vendor) => v.id === mockVendor.id)) {
-        updatedVendors.push(mockVendor);
+      const existing = vendorMap.get(mockVendor.id);
+      if (existing) {
+        // Update with latest mock data but preserve businessInfo and settings if they exist
+        vendorMap.set(mockVendor.id, { 
+          ...mockVendor, 
+          businessInfo: existing.businessInfo,
+          settings: existing.settings,
+          availability: existing.availability || mockVendor.availability
+        });
+      } else {
+        // Add new vendor
+        vendorMap.set(mockVendor.id, mockVendor);
       }
     });
-    localStorage.setItem(KEYS.VENDORS, JSON.stringify(updatedVendors));
+    
+    localStorage.setItem(KEYS.VENDORS, JSON.stringify(Array.from(vendorMap.values())));
   }
-  if (!localStorage.getItem(KEYS.BAGS)) {
+  // Always update bags to ensure latest data is used
+  const existingBags = localStorage.getItem(KEYS.BAGS);
+  if (!existingBags) {
     localStorage.setItem(KEYS.BAGS, JSON.stringify(MOCK_BAGS));
+  } else {
+    // Merge existing bags with new ones, updating existing and adding new
+    const bags: SurpriseBag[] = JSON.parse(existingBags);
+    const bagMap = new Map<string, SurpriseBag>(bags.map((b: SurpriseBag) => [b.id, b]));
+    
+    // Update existing bags and add new ones
+    MOCK_BAGS.forEach(mockBag => {
+      const existing = bagMap.get(mockBag.id);
+      if (existing) {
+        // Update existing bag with latest data but keep order status
+        bagMap.set(mockBag.id, { ...existing, ...mockBag, status: existing.status });
+      } else {
+        // Add new bag
+        bagMap.set(mockBag.id, mockBag);
+      }
+    });
+    
+    localStorage.setItem(KEYS.BAGS, JSON.stringify(Array.from(bagMap.values())));
   }
   if (!localStorage.getItem(KEYS.ORDERS)) {
     // Add some mock past orders with ratings

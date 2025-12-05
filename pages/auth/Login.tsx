@@ -6,14 +6,23 @@ import { UserRole } from '../../types';
 import toast from 'react-hot-toast';
 
 const Login: React.FC = () => {
+  const [step, setStep] = useState<'role' | 'credentials'>('role');
+  const [role, setRole] = useState<UserRole | null>(null);
   const [email, setEmail] = useState('alexwang@gmail.com');
-  const [role, setRole] = useState<UserRole>(UserRole.CONSUMER);
+  const [username, setUsername] = useState('alexwang');
   const { login } = useAuth();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const handleRoleSelect = (selectedRole: UserRole) => {
+    setRole(selectedRole);
+    setStep('credentials');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!role) return;
+    
     setIsSubmitting(true);
     try {
       const user = await login(email, role);
@@ -63,41 +72,72 @@ const Login: React.FC = () => {
       <Card className="p-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Log in to KiasuBites</h2>
         
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <Input 
-            label="Email Address" 
-            type="email" 
-            value={email} 
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">I am a</label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                className={`py-2 px-4 rounded-md border text-sm font-medium ${role === UserRole.CONSUMER ? 'bg-primary-50 border-primary-500 text-primary-700' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'}`}
-                onClick={() => setRole(UserRole.CONSUMER)}
-              >
-                Consumer
-              </button>
-              <button
-                type="button"
-                className={`py-2 px-4 rounded-md border text-sm font-medium ${role === UserRole.VENDOR ? 'bg-primary-50 border-primary-500 text-primary-700' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'}`}
-                onClick={() => setRole(UserRole.VENDOR)}
-              >
-                Vendor
-              </button>
+        {step === 'role' ? (
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3 text-center">I am a</label>
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  className="py-4 px-6 rounded-xl border-2 text-base font-medium bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-primary-500 transition-all"
+                  onClick={() => handleRoleSelect(UserRole.CONSUMER)}
+                >
+                  Consumer
+                </button>
+                <button
+                  type="button"
+                  className="py-4 px-6 rounded-xl border-2 text-base font-medium bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-primary-500 transition-all"
+                  onClick={() => handleRoleSelect(UserRole.VENDOR)}
+                >
+                  Vendor
+                </button>
+              </div>
             </div>
           </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep('role');
+                    setRole(null);
+                  }}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ← Back
+                </button>
+                <span className="text-sm text-gray-600">
+                  Logging in as <strong className="text-gray-900">{role === UserRole.CONSUMER ? 'Consumer' : 'Vendor'}</strong>
+                </span>
+              </div>
+            </div>
 
-          <div className="pt-2">
-            <Button type="submit" className="w-full" isLoading={isSubmitting}>
-              Log In
-            </Button>
-          </div>
-        </form>
+            <Input 
+              label="Username" 
+              type="text" 
+              value={username} 
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              placeholder="alexwang"
+            />
+
+            <Input 
+              label="Email Address" 
+              type="email" 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+
+            <div className="pt-2">
+              <Button type="submit" className="w-full" isLoading={isSubmitting}>
+                Log In
+              </Button>
+            </div>
+          </form>
+        )}
 
         <p className="mt-6 text-center text-sm text-gray-600">
           Don't have an account? <Link to="/register" className="text-primary-600 hover:underline">Sign up</Link>

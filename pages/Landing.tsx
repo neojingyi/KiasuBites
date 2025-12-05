@@ -137,7 +137,7 @@ const Landing: React.FC = () => {
       >
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {[
-            { icon: Users, value: '10K+', label: 'Active Users' },
+            { icon: Users, value: '1K+', label: 'Active Users' },
             { icon: ShoppingBag, value: '5K+', label: 'Bags Rescued' },
             { icon: TrendingDown, value: '70%', label: 'Average Savings' },
             { icon: Leaf, value: '2.5T', label: 'CO₂ Saved (kg)' },

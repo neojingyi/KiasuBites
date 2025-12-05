@@ -320,7 +320,16 @@ const ConsumerHome: React.FC = () => {
                             </div>
                             <p className="text-xs text-green-600 font-semibold mt-1">Save ${(bag.originalPrice - bag.price).toFixed(2)}</p>
                           </div>
-                          <Button size="sm" variant="secondary">View</Button>
+                          <Button 
+                            size="sm" 
+                            variant="secondary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Navigation is handled by the parent Link
+                            }}
+                          >
+                            View
+                          </Button>
                         </div>
                       </div>
                     </Card>

@@ -232,20 +232,41 @@ const VendorDashboard: React.FC = () => {
                <p className="text-green-700 font-medium">Total Revenue (YTD)</p>
                <p className="text-3xl font-bold text-green-900 mt-2">$2,450.00</p>
              </Card>
-             <Card className="p-6 bg-red-50 border-red-100">
-               <p className="text-red-700 font-medium">Platform Fees (20%)</p>
-               <p className="text-3xl font-bold text-red-900 mt-2">$490.00</p>
-             </Card>
-             <Card className="p-6 bg-blue-50 border-blue-100">
-               <p className="text-blue-700 font-medium">Net Payouts</p>
-               <p className="text-3xl font-bold text-blue-900 mt-2">$1,960.00</p>
-             </Card>
+            <Card className="p-6 bg-red-50 border-red-100">
+              <p className="text-red-700 font-medium">Platform Fees (10%)</p>
+              <p className="text-3xl font-bold text-red-900 mt-2">$245.00</p>
+            </Card>
+            <Card className="p-6 bg-blue-50 border-blue-100">
+              <p className="text-blue-700 font-medium">Net Payouts</p>
+              <p className="text-3xl font-bold text-blue-900 mt-2">$2,205.00</p>
+            </Card>
            </div>
 
            <Card className="overflow-hidden">
              <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
                <h3 className="font-bold text-gray-900">Payout History</h3>
-               <Button variant="outline" size="sm">Download CSV</Button>
+               <Button 
+                 variant="outline" 
+                 size="sm"
+                 onClick={() => {
+                   // Generate CSV data
+                   const csvContent = [
+                     ['Period', 'Gross', 'Fees', 'Net', 'Status'],
+                     ...(stats?.payouts || []).map(p => [p.period, p.gross.toFixed(2), p.fees.toFixed(2), p.net.toFixed(2), p.status])
+                   ].map(row => row.join(',')).join('\n');
+                   
+                   // Download CSV
+                   const blob = new Blob([csvContent], { type: 'text/csv' });
+                   const url = window.URL.createObjectURL(blob);
+                   const a = document.createElement('a');
+                   a.href = url;
+                   a.download = `payout-history-${new Date().toISOString().split('T')[0]}.csv`;
+                   a.click();
+                   window.URL.revokeObjectURL(url);
+                 }}
+               >
+                 Download CSV
+               </Button>
              </div>
              <table className="w-full text-sm text-left">
                <thead className="bg-gray-50 text-gray-500 font-medium">

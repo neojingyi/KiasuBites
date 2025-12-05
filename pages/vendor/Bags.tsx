@@ -14,6 +14,8 @@ const VendorBags: React.FC = () => {
     title: '', price: '', originalPrice: '', quantity: '', pickupStart: '18:00', pickupEnd: '19:00', description: ''
   });
 
+  const [editingBag, setEditingBag] = useState<any>(null);
+
   const { data: bags, isLoading } = useQuery({
     queryKey: ['vendorBags', user?.id],
     queryFn: () => api.getVendorBags(user!.id),
@@ -32,10 +34,45 @@ const VendorBags: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vendorBags'] });
       setIsModalOpen(false);
+      setEditingBag(null);
       toast.success('Bag created successfully');
       setFormData({ title: '', price: '', originalPrice: '', quantity: '', pickupStart: '18:00', pickupEnd: '19:00', description: '' });
     }
   });
+
+  const deactivateBagMutation = useMutation({
+    mutationFn: (bagId: string) => {
+      // In a real app, this would call an API endpoint
+      return Promise.resolve();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vendorBags'] });
+      toast.success('Bag deactivated');
+    },
+    onError: () => {
+      toast.error('Failed to deactivate bag');
+    }
+  });
+
+  const handleEdit = (bag: any) => {
+    setEditingBag(bag);
+    setFormData({
+      title: bag.title,
+      price: bag.price.toString(),
+      originalPrice: bag.originalPrice.toString(),
+      quantity: bag.quantity.toString(),
+      pickupStart: bag.pickupStart,
+      pickupEnd: bag.pickupEnd,
+      description: bag.description
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleDeactivate = (bagId: string) => {
+    if (window.confirm('Are you sure you want to deactivate this bag?')) {
+      deactivateBagMutation.mutate(bagId);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,9 +107,9 @@ const VendorBags: React.FC = () => {
                 </p>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm"><Edit2 size={14} className="mr-1"/> Edit</Button>
+                <Button variant="outline" size="sm" onClick={() => handleEdit(bag)}><Edit2 size={14} className="mr-1"/> Edit</Button>
                 {bag.status === 'active' && (
-                  <Button variant="danger" size="sm">Deactivate</Button>
+                  <Button variant="danger" size="sm" onClick={() => handleDeactivate(bag.id)}>Deactivate</Button>
                 )}
               </div>
             </Card>
@@ -81,7 +118,11 @@ const VendorBags: React.FC = () => {
         </div>
       )}
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Create New Surprise Bag">
+      <Modal isOpen={isModalOpen} onClose={() => {
+        setIsModalOpen(false);
+        setEditingBag(null);
+        setFormData({ title: '', price: '', originalPrice: '', quantity: '', pickupStart: '18:00', pickupEnd: '19:00', description: '' });
+      }} title={editingBag ? "Edit Surprise Bag" : "Create New Surprise Bag"}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input 
             label="Title" 
@@ -139,7 +180,9 @@ const VendorBags: React.FC = () => {
             />
           </div>
           <div className="pt-2">
-            <Button type="submit" className="w-full" isLoading={createBagMutation.isPending}>Create Bag</Button>
+            <Button type="submit" className="w-full" isLoading={createBagMutation.isPending}>
+              {editingBag ? 'Update Bag' : 'Create Bag'}
+            </Button>
           </div>
         </form>
       </Modal>

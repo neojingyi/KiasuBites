@@ -16,7 +16,9 @@ const VendorVerification: React.FC = () => {
     brandName: '',
     uen: '',
     businessType: 'Restaurant',
-    contactPerson: '',
+    directorName: '',
+    nric: '',
+    address: '',
     phone: '',
     email: '',
     openingHours: '10am - 10pm daily'
@@ -99,15 +101,38 @@ const VendorVerification: React.FC = () => {
           </div>
 
           <div className="space-y-4 pt-4 border-t border-gray-100">
-             <h3 className="font-medium text-gray-900">Contact Details</h3>
+             <h3 className="font-medium text-gray-900">Director Information</h3>
              <div className="grid md:grid-cols-2 gap-6">
                 <Input 
-                  label="Contact Person Name" 
-                  name="contactPerson" 
-                  value={formData.contactPerson} 
+                  label="Director Name" 
+                  name="directorName" 
+                  value={formData.directorName} 
                   onChange={handleChange} 
                   required 
+                  placeholder="Full name as per NRIC"
                 />
+                 <Input 
+                  label="NRIC" 
+                  name="nric" 
+                  value={formData.nric} 
+                  onChange={handleChange} 
+                  required 
+                  placeholder="e.g. S1234567A"
+                />
+             </div>
+             <Input 
+                label="Business Address" 
+                name="address" 
+                value={formData.address} 
+                onChange={handleChange} 
+                required 
+                placeholder="Full business address"
+              />
+          </div>
+
+          <div className="space-y-4 pt-4 border-t border-gray-100">
+             <h3 className="font-medium text-gray-900">Contact Details</h3>
+             <div className="grid md:grid-cols-2 gap-6">
                  <Input 
                   label="Phone Number" 
                   name="phone" 
@@ -116,15 +141,15 @@ const VendorVerification: React.FC = () => {
                   onChange={handleChange} 
                   required 
                 />
+                 <Input 
+                  label="Business Email" 
+                  name="email" 
+                  type="email"
+                  value={formData.email} 
+                  onChange={handleChange} 
+                  required 
+                />
              </div>
-             <Input 
-                label="Business Email" 
-                name="email" 
-                type="email"
-                value={formData.email} 
-                onChange={handleChange} 
-                required 
-              />
           </div>
 
           <div className="pt-2">

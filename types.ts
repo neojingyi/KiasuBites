@@ -19,7 +19,9 @@ export interface VendorBusinessInfo {
   brandName?: string;
   uen: string;
   businessType: string;
-  contactPerson: string;
+  directorName: string;
+  nric: string;
+  address: string;
   phone: string;
   email: string;
   openingHours: string;

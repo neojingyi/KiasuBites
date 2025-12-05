@@ -1,9 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Card, Button, Input, Badge } from '../../components/UI';
+import toast from 'react-hot-toast';
 
 const ConsumerProfile: React.FC = () => {
   const { user } = useAuth();
+  const [searchRadius, setSearchRadius] = useState(5);
+
+  const handleSave = () => {
+    toast.success('Preferences saved successfully!');
+  };
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -30,21 +36,28 @@ const ConsumerProfile: React.FC = () => {
              <label className="block text-sm font-medium text-gray-700 mb-2">Dietary Preferences</label>
              <div className="flex gap-2">
                 <Badge variant="success">Vegetarian</Badge>
-                <button className="text-xs text-primary-600 hover:underline">+ Add</button>
+                <button className="text-xs text-primary-600 hover:underline" onClick={() => toast.info('Feature coming soon!')}>+ Add</button>
              </div>
            </div>
 
            <div>
              <label className="block text-sm font-medium text-gray-700 mb-2">Search Radius</label>
              <div className="flex items-center gap-4">
-                <input type="range" min="1" max="20" className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
-                <span className="text-sm font-bold w-12 text-right">5 km</span>
+                <input 
+                  type="range" 
+                  min="1" 
+                  max="20" 
+                  value={searchRadius}
+                  onChange={(e) => setSearchRadius(Number(e.target.value))}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" 
+                />
+                <span className="text-sm font-bold w-12 text-right">{searchRadius} km</span>
              </div>
            </div>
         </div>
 
         <div className="flex justify-end">
-           <Button variant="outline">Save Changes</Button>
+           <Button variant="outline" onClick={handleSave}>Save Changes</Button>
         </div>
       </Card>
     </div>

@@ -14,6 +14,14 @@ export interface MarkerData {
   lat: number;
   title?: string;
   color?: string;
+  count?: number; // Number to display on marker
+  bags?: Array<{
+    id: string;
+    title: string;
+    price: number;
+    vendorName: string;
+    vendorAddress: string;
+  }>;
 }
 
 interface CountryGlobeProps {
@@ -41,6 +49,7 @@ export const CountryGlobe: React.FC<CountryGlobeProps> = ({
   const rotationIntervalRef = useRef<number | null>(null);
   const idleTimeoutRef = useRef<number | null>(null);
   const isUserInteractingRef = useRef(false);
+  const onLocationClickRef = useRef(onLocationClick);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -120,18 +129,143 @@ export const CountryGlobe: React.FC<CountryGlobeProps> = ({
     markersRef.current.forEach(marker => marker.remove());
     markersRef.current = [];
 
+    const currentZoom = mapRef.current.getZoom();
+    const showDetailedCards = currentZoom > 12; // Show cards when zoomed in
+
     // Add new markers
     markers.forEach((markerData) => {
       const el = document.createElement('div');
       el.className = 'custom-marker';
-      el.style.width = '20px';
-      el.style.height = '20px';
-      el.style.borderRadius = '50%';
-      el.style.backgroundColor = markerData.color || '#dc2626';
-      el.style.border = '3px solid white';
-      el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
-      el.style.cursor = 'pointer';
-      el.title = markerData.title || '';
+      
+      if (showDetailedCards && markerData.bags && markerData.bags.length > 0) {
+        // Show detailed card when zoomed in
+        el.style.width = 'auto';
+        el.style.height = 'auto';
+        el.style.borderRadius = '0';
+        el.style.backgroundColor = 'transparent';
+        el.style.border = 'none';
+        el.style.boxShadow = 'none';
+        el.style.cursor = 'pointer';
+        
+        const card = document.createElement('div');
+        card.style.cssText = `
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(8px);
+          border: 1px solid rgba(16, 185, 129, 0.2);
+          border-radius: 12px;
+          padding: 8px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          min-width: 150px;
+          max-width: 200px;
+        `;
+        
+        const iconDiv = document.createElement('div');
+        iconDiv.style.cssText = `
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #10b981, #059669);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: bold;
+          flex-shrink: 0;
+          font-size: 14px;
+        `;
+        iconDiv.innerHTML = '🛍️';
+        
+        const contentDiv = document.createElement('div');
+        contentDiv.style.cssText = `
+          flex: 1;
+          min-width: 0;
+        `;
+        
+        const addressP = document.createElement('p');
+        addressP.style.cssText = `
+          font-size: 10px;
+          color: #64748b;
+          margin: 0 0 2px 0;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        `;
+        addressP.textContent = markerData.bags[0].vendorAddress;
+        
+        const titleP = document.createElement('p');
+        titleP.style.cssText = `
+          font-size: 12px;
+          font-weight: 600;
+          color: #065f46;
+          margin: 0 0 2px 0;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        `;
+        titleP.textContent = markerData.bags[0].title;
+        
+        const priceP = document.createElement('p');
+        priceP.style.cssText = `
+          font-size: 10px;
+          color: #475569;
+          font-weight: 600;
+          margin: 0;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        `;
+        priceP.textContent = `$${markerData.bags[0].price.toFixed(2)} · ${markerData.bags[0].vendorName}`;
+        
+        contentDiv.appendChild(addressP);
+        contentDiv.appendChild(titleP);
+        contentDiv.appendChild(priceP);
+        card.appendChild(iconDiv);
+        card.appendChild(contentDiv);
+        el.appendChild(card);
+      } else {
+        // Show green numbered dot when zoomed out
+        el.style.width = '48px';
+        el.style.height = '48px';
+        el.style.borderRadius = '50%';
+        el.style.backgroundColor = '#10b981'; // Green color
+        el.style.border = '4px solid white';
+        el.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)';
+        el.style.cursor = 'pointer';
+        el.style.display = 'flex';
+        el.style.alignItems = 'center';
+        el.style.justifyContent = 'center';
+        el.style.fontWeight = 'bold';
+        el.style.fontSize = '16px';
+        el.style.color = 'white';
+        el.textContent = markerData.count?.toString() || '1';
+        el.title = markerData.title || '';
+      }
+
+      // Add click handler to marker
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!mapRef.current) return;
+        
+        const currentZoom = mapRef.current.getZoom();
+        const isShowingCard = showDetailedCards && markerData.bags && markerData.bags.length > 0;
+        
+        if (isShowingCard) {
+          // Already showing card - navigate to bag details
+          if (markerData.bags && markerData.bags.length > 0) {
+            window.location.href = `#/consumer/bags/${markerData.bags[0].id}`;
+          }
+        } else {
+          // Showing numbered dot - zoom in to this location
+          mapRef.current.easeTo({
+            center: [markerData.lng, markerData.lat],
+            zoom: Math.min(14, currentZoom + 2), // Zoom in by 2 levels, max zoom 14
+            duration: 1000, // Smooth animation
+          });
+        }
+      });
 
       const marker = new mapboxgl.Marker(el)
         .setLngLat([markerData.lng, markerData.lat])
@@ -187,15 +321,38 @@ export const CountryGlobe: React.FC<CountryGlobeProps> = ({
       }
     });
 
-    // Click handler
-    if (onLocationClick) {
-      map.on('click', async (e) => {
-        handleUserInteraction();
-        const { lng, lat } = e.lngLat;
-        const name = await reverseGeocode(lng, lat);
-        onLocationClick({ name, lat, lng });
+    // Click handler - zoom in when clicking on map
+    map.on('click', async (e) => {
+      // Don't zoom if clicking on a marker (markers handle their own clicks)
+      const target = e.originalEvent?.target as HTMLElement;
+      if (target && (target.closest('.custom-marker') || target.closest('.mapboxgl-popup'))) {
+        return;
+      }
+      
+      // Prevent default mapbox double-click zoom behavior
+      e.preventDefault();
+      
+      handleUserInteraction();
+      const currentZoom = map.getZoom();
+      const { lng, lat } = e.lngLat;
+      
+      // Zoom in to clicked location
+      map.easeTo({
+        center: [lng, lat],
+        zoom: Math.min(14, currentZoom + 2), // Zoom in by 2 levels, max zoom 14
+        duration: 1000,
       });
-    }
+      
+      // Call location click handler if provided (but don't let it interfere with zoom)
+      if (onLocationClickRef.current) {
+        try {
+          const name = await reverseGeocode(lng, lat);
+          onLocationClickRef.current({ name, lat, lng });
+        } catch (err) {
+          console.error('Reverse geocoding error:', err);
+        }
+      }
+    });
 
     // User interaction handlers
     map.on('dragstart', handleUserInteraction);
@@ -204,7 +361,11 @@ export const CountryGlobe: React.FC<CountryGlobeProps> = ({
     map.on('pitchstart', handleUserInteraction);
 
     map.on('dragend', handleUserInteraction);
-    map.on('zoomend', handleUserInteraction);
+    map.on('zoomend', () => {
+      handleUserInteraction();
+      // Update markers when zoom changes to show/hide cards
+      updateMarkers();
+    });
     map.on('rotateend', handleUserInteraction);
     map.on('pitchend', handleUserInteraction);
 
@@ -226,7 +387,12 @@ export const CountryGlobe: React.FC<CountryGlobeProps> = ({
         mapRef.current = null;
       }
     };
-  }, [countryCenter, countryZoom, theme, maxBounds, onLocationClick, reverseGeocode, handleUserInteraction, startAutoRotation, stopAutoRotation]);
+  }, [countryCenter, countryZoom, theme, maxBounds, reverseGeocode, handleUserInteraction, startAutoRotation, stopAutoRotation, updateMarkers]);
+
+  // Update the ref when onLocationClick changes (without re-initializing the map)
+  useEffect(() => {
+    onLocationClickRef.current = onLocationClick;
+  }, [onLocationClick]);
 
   // Update markers when they change
   useEffect(() => {
