@@ -39,6 +39,7 @@ export const formatCurrency = (value: number, currency: string = 'SGD'): string 
  * Format CO2e value
  */
 export const formatCO2e = (kg: number): string => {
+  if (!kg || isNaN(kg) || kg <= 0) return '0 kg of CO2e';
   if (kg >= 1000) {
     return `${(kg / 1000).toFixed(1)} t of CO2e`;
   }
@@ -49,6 +50,7 @@ export const formatCO2e = (kg: number): string => {
  * Format hours value
  */
 export const formatHours = (hours: number): string => {
+  if (!hours || isNaN(hours) || hours <= 0) return '0 mins';
   if (hours >= 1) {
     return `${Math.round(hours)} hrs`;
   }

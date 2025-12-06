@@ -171,9 +171,12 @@ export const Modal: React.FC<{
       exit={{ opacity: 0 }}
       onClick={onClose}
     >
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      {/* Backdrop - blurred background only */}
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" style={{ zIndex: 1 }} onClick={onClose} />
+      {/* Modal content - clear and above backdrop */}
       <motion.div
-        className={`bg-white rounded-3xl w-full ${sizeClasses[size]} overflow-hidden border border-gray-200`}
+        className={`relative bg-white rounded-3xl w-full ${sizeClasses[size]} overflow-hidden border border-gray-200 shadow-2xl`}
+        style={{ zIndex: 2 }}
         initial={{ scale: 0.95, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.95, opacity: 0, y: 20 }}
@@ -203,7 +206,7 @@ export const Modal: React.FC<{
 
 // Section Header component
 export const SectionHeader: React.FC<{
-  title: string;
+  title: string | React.ReactNode;
   subtitle?: string;
   className?: string;
 }> = ({ title, subtitle, className = '' }) => {

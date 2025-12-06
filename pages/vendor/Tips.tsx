@@ -17,7 +17,7 @@ const VendorTips: React.FC = () => {
              <h2 className="text-xl font-bold">Platform Fees & Payouts</h2>
            </div>
            <ul className="space-y-3 text-gray-700 text-sm list-disc pl-5">
-             <li>KiasuBites charges a flat commission of <strong>10%</strong> on each bag sold.</li>
+             <li>Kiasu<span className="text-primary-600">Bites</span> charges a flat commission of <strong>10%</strong> on each bag sold.</li>
              <li>Payouts are processed weekly on Mondays for the previous week's sales.</li>
              <li>Funds are transferred directly to your registered bank account via GIRO/PayNow.</li>
              <li>You can view detailed payout history in your Dashboard under the "Financials" tab.</li>

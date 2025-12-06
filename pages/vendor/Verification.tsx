@@ -50,7 +50,7 @@ const VendorVerification: React.FC = () => {
     <div className="max-w-2xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Verify Your Business</h1>
-        <p className="text-gray-600">We need a few details to ensure KiasuBites remains a trusted marketplace.</p>
+        <p className="text-gray-600">We need a few details to ensure Kiasu<span className="text-primary-600">Bites</span> remains a trusted marketplace.</p>
       </div>
 
       <Card className="p-8">

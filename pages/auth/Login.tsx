@@ -11,7 +11,7 @@ const Login: React.FC = () => {
   const [step, setStep] = useState<'role' | 'credentials'>('role');
   const [role, setRole] = useState<UserRole | null>(null);
   const [email, setEmail] = useState('alexwang@gmail.com');
-  const [username, setUsername] = useState('alexwang');
+  const [password, setPassword] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,7 +27,7 @@ const Login: React.FC = () => {
     
     setIsSubmitting(true);
     try {
-      const user = await login(email, role);
+      const user = await login(email, password, role);
       const firstName = user.name.split(' ')[0]; // Extract first name
       toast.success(`Welcome back! Logged in as ${firstName}`, {
         style: {
@@ -72,7 +72,7 @@ const Login: React.FC = () => {
   return (
     <div className="max-w-md mx-auto mt-10">
       <Card className="p-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Log in to KiasuBites</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Log in to Kiasu<span className="text-primary-600">Bites</span></h2>
         
         {step === 'role' ? (
           <div className="space-y-6">
@@ -139,20 +139,20 @@ const Login: React.FC = () => {
             </div>
 
             <Input 
-              label="Username" 
-              type="text" 
-              value={username} 
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              placeholder="alexwang"
-            />
-
-            <Input 
               label="Email Address" 
               type="email" 
               value={email} 
               onChange={(e) => setEmail(e.target.value)}
               required
+            />
+
+            <Input 
+              label="Password" 
+              type="password" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              placeholder="Enter your password"
             />
 
             <div className="pt-2">

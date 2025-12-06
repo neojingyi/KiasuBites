@@ -12,6 +12,9 @@ export interface User {
   radiusKm?: number;
   favorites?: string[]; // vendor IDs
   isVerified?: boolean; // For vendors
+  phoneNumber?: string;
+  address?: string;
+  profilePictureUrl?: string;
 }
 
 export interface VendorBusinessInfo {

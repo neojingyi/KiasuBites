@@ -14,9 +14,8 @@ import {
   Settings,
   Heart,
   ShieldAlert,
-  Map,
 } from "lucide-react";
-import { Button, Modal } from "./UI";
+import { Button, Modal, Badge } from "./UI";
 import { motion, AnimatePresence } from "framer-motion";
 import bagLogo from "../assets/Untitled design (4).png";
 import {
@@ -37,6 +36,7 @@ const Layout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
 
   const handleLogoutClick = () => {
     setShowLogoutConfirm(true);
@@ -58,7 +58,6 @@ const Layout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
         { name: "Browse", link: "/consumer/home" },
         { name: "Favorites", link: "/consumer/favorites" },
         { name: "Orders", link: "/consumer/orders" },
-        { name: "Map", link: "/consumer/map" },
       ];
     }
 
@@ -131,39 +130,134 @@ const Layout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
               </>
             ) : (
               <>
-                {user.role === "consumer" && (
-                  <Link
-                    to="/consumer/profile"
-                    className="flex items-center space-x-2"
+                {/* Profile Dropdown */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                    className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
                   >
-                    <div className="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-white font-bold text-sm">
-                      {user.name.charAt(0)}
-                    </div>
+                    {user.profilePictureUrl ? (
+                      <img
+                        src={user.profilePictureUrl}
+                        alt={user.name}
+                        className="w-8 h-8 rounded-full object-cover border-2 border-primary-600"
+                        onError={(e) => {
+                          // Fallback to initials if image fails to load
+                          console.error('Profile picture failed to load:', user.profilePictureUrl);
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          // Show fallback
+                          const fallback = target.nextElementSibling as HTMLElement;
+                          if (fallback) {
+                            fallback.style.display = 'flex';
+                          }
+                        }}
+                      />
+                    ) : null}
+                    {!user.profilePictureUrl && (
+                      <div className="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-white font-bold text-sm">
+                        {user.name.charAt(0)}
+                      </div>
+                    )}
                     <span className="hidden md:inline text-sm font-medium">
                       {user.name}
                     </span>
-                  </Link>
-                )}
-                {user.role === "vendor" && (
-                  <>
-                    <Link
-                      to="/vendor/settings"
-                      className="p-2 hover:bg-gray-100 rounded-lg"
-                    >
-                      <Settings size={18} />
-                    </Link>
-                    <span className="text-sm font-medium hidden md:inline">
-                      {user.name}
-                    </span>
-                  </>
-                )}
-                <button
-                  onClick={handleLogoutClick}
-                  className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 hover:text-red-600 transition-colors"
-                  title="Sign out"
-                >
-                  <LogOut size={18} />
-                </button>
+                  </button>
+
+                  {/* Profile Dropdown Menu */}
+                  {showProfileDropdown && (
+                    <>
+                      {/* Backdrop */}
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setShowProfileDropdown(false)}
+                      />
+                      {/* Dropdown Content */}
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute right-0 top-full mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden"
+                      >
+                        <div className="p-3 border-b border-gray-100">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-sm font-semibold text-gray-900">Profile</h3>
+                            <button
+                              onClick={() => setShowProfileDropdown(false)}
+                              className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100 transition-colors"
+                            >
+                              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="p-3 space-y-2">
+                          {/* User Info */}
+                          <div className="flex items-center gap-2.5 pb-3 border-b border-gray-100">
+                  {user.profilePictureUrl ? (
+                    <img
+                      src={user.profilePictureUrl}
+                      alt={user.name}
+                      className="w-9 h-9 rounded-full object-cover border-2 border-primary-600 flex-shrink-0"
+                      onError={(e) => {
+                        // Fallback to initials if image fails to load
+                        console.error('Profile picture failed to load in dropdown:', user.profilePictureUrl);
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                      }}
+                    />
+                  ) : null}
+                  {!user.profilePictureUrl && (
+                    <div className="w-9 h-9 rounded-full bg-primary-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+                      {user.name.charAt(0)}
+                    </div>
+                  )}
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-sm font-semibold text-gray-900 truncate">{user.name}</h4>
+                              <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                            </div>
+                          </div>
+
+                          {/* Settings Links */}
+                          {user.role === "consumer" && (
+                            <Link
+                              to="/consumer/profile"
+                              onClick={() => setShowProfileDropdown(false)}
+                              className="flex items-center gap-2.5 px-2.5 py-2 rounded-md hover:bg-gray-50 transition-colors text-gray-700 text-sm"
+                            >
+                              <UserIcon size={16} />
+                              <span className="font-medium">Profile Settings</span>
+                            </Link>
+                          )}
+                          {user.role === "vendor" && (
+                            <Link
+                              to="/vendor/settings"
+                              onClick={() => setShowProfileDropdown(false)}
+                              className="flex items-center gap-2.5 px-2.5 py-2 rounded-md hover:bg-gray-50 transition-colors text-gray-700 text-sm"
+                            >
+                              <Settings size={16} />
+                              <span className="font-medium">Settings</span>
+                            </Link>
+                          )}
+
+                          {/* Logout Button */}
+                          <button
+                            onClick={() => {
+                              setShowProfileDropdown(false);
+                              handleLogoutClick();
+                            }}
+                            className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md hover:bg-red-50 transition-colors text-red-600 font-medium text-sm"
+                          >
+                            <LogOut size={16} />
+                            <span>Sign Out</span>
+                          </button>
+                        </div>
+                      </motion.div>
+                    </>
+                  )}
+                </div>
               </>
             )}
           </div>
@@ -274,7 +368,7 @@ const Layout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
             <div>
               <h3 className="font-bold text-gray-900 mb-3 text-lg">
-                KiasuBites
+                Kiasu<span className="text-primary-600">Bites</span>
               </h3>
               <p className="text-sm text-gray-600 leading-relaxed">
                 Save food, save money. Join the fight against food waste.
@@ -343,7 +437,7 @@ const Layout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
           </div>
           <div className="border-t border-gray-200 pt-6">
             <p className="text-center text-sm text-gray-500">
-              © {new Date().getFullYear()} KiasuBites. Save food, save money.
+              © {new Date().getFullYear()} Kiasu<span className="text-primary-600">Bites</span>. Save food, save money.
             </p>
           </div>
         </div>

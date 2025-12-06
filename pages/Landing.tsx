@@ -1,5 +1,5 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button, Card, SectionHeader } from "../components/UI";
 import {
   ShoppingBag,
@@ -15,16 +15,28 @@ import {
   List,
   Map as MapIcon,
   CheckCircle,
+  MapPin,
+  Store,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { ContainerScroll } from "../components/ui/container-scroll-animation";
 import bagImage from "../assets/Untitled design (4).png";
 import macaronsImage from "../assets/Untitled design (2).png";
-import heroImage from "../assets/Gemini_Generated_Image_f2ur9gf2ur9gf2ur.png";
+import heroImage from "../assets/Gemini_Generated_Image_dgtgt6dgtgt6dgtg.png";
 import { FloatingHoverEffect } from "../components/FloatingHoverEffect";
 import { BackgroundGradient } from "../components/ui/background-gradient";
 
 const Landing: React.FC = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
+
+  const handleFindFood = () => {
+    const params = new URLSearchParams();
+    if (searchQuery.trim()) {
+      params.set("search", searchQuery.trim());
+    }
+    navigate(`/consumer/home?${params.toString()}`);
+  };
   // Mock Home Page Preview Component
   const HomePagePreview = () => (
     <div className="w-full h-full bg-white overflow-y-auto">
@@ -168,13 +180,64 @@ const Landing: React.FC = () => {
           src={heroImage}
           alt="KiasuBites - Good food shouldn't go to waste"
           className="w-full h-full object-cover"
-          style={{ objectPosition: "center 35%" }}
+          style={{ objectPosition: "center 60%" }}
           initial={{ scale: 1.1 }}
           animate={{ scale: 1 }}
           transition={{ duration: 1.2, ease: "easeOut" }}
         />
-        {/* Fading gradient overlay at the bottom */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40" />
+        {/* Fading gradient overlay at the bottom blending into background */}
+        <div 
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: 'linear-gradient(to bottom, transparent 0%, transparent 60%, rgba(254, 251, 241, 0.3) 80%, rgba(254, 251, 241, 0.7) 90%, #fefbf1 100%)'
+          }}
+        />
+        
+        {/* Search Bar Overlay on Left Side */}
+        <motion.div
+          initial={{ opacity: 0, x: -30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+          className="absolute left-8 md:left-16 top-[35%] z-20 w-full max-w-md"
+        >
+          <div className="space-y-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6 drop-shadow-lg">
+              Find surprise bags near you
+            </h2>
+            
+            {/* Search Input */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex-1 relative">
+                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                <input
+                  type="text"
+                  placeholder="Search for a store"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleFindFood();
+                    }
+                  }}
+                  className="w-full pl-12 pr-4 py-4 rounded-lg border-2 border-white/20 bg-white/95 backdrop-blur-sm focus:border-white focus:outline-none focus:ring-2 focus:ring-white/50 text-gray-900 placeholder-gray-400"
+                />
+              </div>
+              <button 
+                onClick={handleFindFood}
+                className="px-6 py-4 bg-gray-900 text-white rounded-lg font-semibold hover:bg-gray-800 transition-colors whitespace-nowrap"
+              >
+                Find Food
+              </button>
+            </div>
+            
+            {/* Sign In Link */}
+            <div className="pt-2">
+              <Link to="/login" className="text-sm text-white hover:text-primary-200 transition-colors drop-shadow-md">
+                Or <span className="underline">Sign in</span>
+              </Link>
+            </div>
+          </div>
+        </motion.div>
       </motion.section>
 
       {/* iPad Preview Section */}
@@ -198,7 +261,7 @@ const Landing: React.FC = () => {
                 </span>
               </h2>
               <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-                Experience KiasuBites on your device. Discover amazing deals and
+                Experience Kiasu<span className="text-primary-600">Bites</span> on your device. Discover amazing deals and
                 rescue delicious food with ease.
               </p>
             </motion.div>
@@ -248,7 +311,11 @@ const Landing: React.FC = () => {
       {/* Features */}
       <section className="max-w-6xl mx-auto py-16 md:py-24">
         <SectionHeader
-          title="Why KiasuBites?"
+          title={
+            <>
+              Why Kiasu<span className="text-primary-600">Bites</span>?
+            </>
+          }
           subtitle="Join thousands of food lovers and vendors making a difference"
         />
         <div className="grid md:grid-cols-3 gap-8">
@@ -343,18 +410,79 @@ const Landing: React.FC = () => {
               <div className="relative z-10">
                 <div className="w-24 h-24 rounded-full bg-primary-600 text-white flex items-center justify-center text-4xl font-bold mx-auto mb-6">
                   {item.step}
-                </div>
+          </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-3 text-center">
                   {item.title}
                 </h3>
                 <p className="text-gray-600 text-center leading-relaxed">
                   {item.description}
                 </p>
-              </div>
+        </div>
             </motion.div>
           ))}
         </div>
       </section>
+      
+      {/* Buy Food / Sell Surplus Section */}
+      <motion.section
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+        className="max-w-4xl mx-auto py-16 md:py-24"
+      >
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Buy Food Card */}
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+          >
+            <Card className="p-6 border-2 border-primary-200 bg-primary-50/50 hover:bg-primary-50 transition-colors">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-xl bg-primary-100 flex items-center justify-center flex-shrink-0">
+                  <ShoppingBag className="text-primary-600" size={32} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-xl font-bold text-gray-900 mb-1">Buy Food</h3>
+                  <p className="text-sm text-gray-600">Browse surprise bags</p>
+                </div>
+                <div className="flex-shrink-0">
+                  <Link to="/consumer/home">
+                    <Button variant="primary">
+                      Browse Bags
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+
+          {/* Sell Surplus Card */}
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+          >
+            <Card className="p-6 border-2 border-gray-200 bg-white hover:bg-gray-50 transition-colors">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-xl bg-primary-100 flex items-center justify-center flex-shrink-0">
+                  <Store className="text-primary-600" size={32} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-xl font-bold text-gray-900 mb-1">Sell Surplus</h3>
+                  <p className="text-sm text-gray-600">List your food bags</p>
+                </div>
+                <div className="flex-shrink-0">
+        <Link to="/register">
+                    <Button variant="outline">
+                      Get Started
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+        </div>
+      </motion.section>
 
       {/* CTA Section */}
       <motion.section
@@ -364,8 +492,8 @@ const Landing: React.FC = () => {
         transition={{ duration: 0.6 }}
         className="max-w-4xl mx-auto py-16 md:py-24"
       >
-        <BackgroundGradient className="rounded-[22px] p-12 md:p-16 bg-white text-center">
-          <div>
+        <div className="rounded-[22px] p-12 md:p-16 text-center overflow-visible bg-gradient-to-br from-primary-50 via-orange-50 to-yellow-50 border-2 border-primary-200/50 shadow-xl">
+          <div className="relative z-20 overflow-visible">
             <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight text-gray-900">
               Ready to rescue?
             </h2>
@@ -373,18 +501,19 @@ const Landing: React.FC = () => {
               Join thousands of foodies and vendors in the fight against food
               waste.
             </p>
-            <Link to="/register">
-              <Button
-                size="lg"
-                variant="secondary"
-                className="bg-gray-900 text-white hover:bg-gray-800 border-0 px-10 md:px-16 py-4 whitespace-nowrap min-w-[280px] md:min-w-[320px]"
-              >
-                <Sparkles className="mr-2 h-5 w-5" />
-                Join KiasuBites Free
-              </Button>
-            </Link>
+            <div className="relative z-[50] inline-block">
+              <Link to="/register" className="relative z-[50] block">
+                <Button
+                  size="lg"
+                  variant="primary"
+                  className="px-10 md:px-16 py-4 whitespace-nowrap min-w-[280px] md:min-w-[320px] relative z-[50] pointer-events-auto shadow-lg"
+                >
+             Join KiasuBites Free
+                </Button>
+        </Link>
+            </div>
           </div>
-        </BackgroundGradient>
+        </div>
       </motion.section>
     </div>
   );

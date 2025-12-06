@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { Button, Card, Input, Badge } from '../../components/UI';
@@ -6,9 +6,29 @@ import { VendorSettings } from '../../types';
 import toast from 'react-hot-toast';
 import { MapPin, Info, AlertTriangle, User, Mail, Building2, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import profilePic1 from '../../assets/1.png';
+import profilePic2 from '../../assets/2.png';
+import profilePic3 from '../../assets/3.png';
+import profilePic4 from '../../assets/4.png';
+import profilePic5 from '../../assets/5.png';
+import profilePic6 from '../../assets/6.png';
+import profilePic7 from '../../assets/7.png';
+import profilePic8 from '../../assets/8.png';
+
+const profilePictures = [
+  { id: 1, src: profilePic1 },
+  { id: 2, src: profilePic2 },
+  { id: 3, src: profilePic3 },
+  { id: 4, src: profilePic4 },
+  { id: 5, src: profilePic5 },
+  { id: 6, src: profilePic6 },
+  { id: 7, src: profilePic7 },
+  { id: 8, src: profilePic8 },
+];
 
 const VendorSettingsPage: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const navigate = useNavigate();
   const [settings, setSettings] = useState<VendorSettings>({
     instructions: 'Level 1, near the main entrance next to the fountain.',
@@ -16,6 +36,18 @@ const VendorSettingsPage: React.FC = () => {
     storageInfo: 'Best consumed within 24 hours.',
     showAllergens: true
   });
+  const [selectedProfilePic, setSelectedProfilePic] = useState<number>(1);
+  const [showProfilePicSelector, setShowProfilePicSelector] = useState(false);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+
+  useEffect(() => {
+    if (user?.profilePictureUrl) {
+      const currentPic = profilePictures.find(pic => pic.src === user.profilePictureUrl);
+      if (currentPic) {
+        setSelectedProfilePic(currentPic.id);
+      }
+    }
+  }, [user]);
 
   const handleSave = async () => {
     if(!user) return;
@@ -24,6 +56,26 @@ const VendorSettingsPage: React.FC = () => {
       toast.success('Settings updated successfully');
     } catch (e) {
       toast.error('Failed to save');
+    }
+  };
+
+  const handleSaveProfilePicture = async () => {
+    if (!user) return;
+    setIsSavingProfile(true);
+    try {
+      const selectedPic = profilePictures.find(pic => pic.id === selectedProfilePic);
+      const profilePictureUrl = selectedPic?.src || profilePictures[0].src;
+
+      await updateUser({
+        profilePictureUrl,
+      });
+
+      toast.success('Profile picture updated successfully!');
+      setShowProfilePicSelector(false);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update profile picture');
+    } finally {
+      setIsSavingProfile(false);
     }
   };
 
@@ -38,8 +90,25 @@ const VendorSettingsPage: React.FC = () => {
       {/* Profile Section */}
       <Card className="p-6">
         <div className="flex items-center gap-4 mb-6">
-          <div className="w-16 h-16 rounded-full bg-primary-600 flex items-center justify-center text-white text-2xl font-bold">
-            {user?.name.charAt(0)}
+          <div className="relative">
+            {user?.profilePictureUrl ? (
+              <img
+                src={user.profilePictureUrl}
+                alt={user.name}
+                className="w-16 h-16 rounded-full object-cover border-2 border-primary-600"
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-primary-600 flex items-center justify-center text-white text-2xl font-bold">
+                {user?.name.charAt(0)}
+              </div>
+            )}
+            <button
+              onClick={() => setShowProfilePicSelector(!showProfilePicSelector)}
+              className="absolute bottom-0 right-0 w-6 h-6 bg-primary-600 rounded-full flex items-center justify-center text-white text-xs hover:bg-primary-700 transition-colors border-2 border-white"
+              title="Change profile picture"
+            >
+              ✎
+            </button>
           </div>
           <div className="flex-grow">
             <h2 className="text-xl font-bold">{user?.name}</h2>
@@ -63,6 +132,80 @@ const VendorSettingsPage: React.FC = () => {
             Logout
           </Button>
         </div>
+
+        {/* Profile Picture Selector */}
+        {showProfilePicSelector && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="pt-4 border-t border-gray-200"
+          >
+            <label className="block text-sm font-semibold text-gray-900 mb-3">
+              Choose Your Profile Picture
+            </label>
+            <div className="grid grid-cols-4 gap-3 mb-4">
+              {profilePictures.map((pic) => (
+                <motion.button
+                  key={pic.id}
+                  type="button"
+                  onClick={() => setSelectedProfilePic(pic.id)}
+                  className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all duration-200 ${
+                    selectedProfilePic === pic.id
+                      ? 'border-primary-600 ring-2 ring-primary-200 ring-offset-2'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <img
+                    src={pic.src}
+                    alt={`Profile ${pic.id}`}
+                    className="w-full h-full object-cover"
+                  />
+                  {selectedProfilePic === pic.id && (
+                    <motion.div
+                      className="absolute inset-0 bg-primary-600/20 flex items-center justify-center"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                    >
+                      <div className="w-6 h-6 rounded-full bg-primary-600 flex items-center justify-center">
+                        <svg
+                          className="w-4 h-4 text-white"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      </div>
+                    </motion.div>
+                  )}
+                </motion.button>
+              ))}
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowProfilePicSelector(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleSaveProfilePicture}
+                isLoading={isSavingProfile}
+              >
+                Save Picture
+              </Button>
+            </div>
+          </motion.div>
+        )}
       </Card>
 
       <div className="grid md:grid-cols-2 gap-8">

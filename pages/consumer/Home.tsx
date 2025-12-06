@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../../services/api";
 import { Card, Badge, Button, Input } from "../../components/UI";
@@ -12,10 +12,11 @@ import {
   List,
   ShoppingBag,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { SurpriseBag, Vendor } from "../../types";
 import { useAuth } from "../../context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
+import { CountryGlobe, MarkerData } from "../../components/CountryGlobe";
 
 const SINGAPORE_BOUNDS = {
   minLat: 1.22,
@@ -160,6 +161,7 @@ const ConsumerHome: React.FC = () => {
     queryFn: api.getVendors,
   });
 
+  const [searchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({
@@ -169,28 +171,73 @@ const ConsumerHome: React.FC = () => {
   });
   const [showFilterPanel, setShowFilterPanel] = useState(false);
 
-  // Filtering Logic
-  const filteredBags = bags?.filter((bag) => {
-    const matchesSearch =
-      bag.vendorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      bag.title.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesCategory =
-      filters.categories.length === 0 ||
-      (bag.category && filters.categories.includes(bag.category));
-
-    const matchesDietary =
-      filters.dietary.length === 0 ||
-      bag.dietaryTags.some((tag) => filters.dietary.includes(tag));
-
-    // Simple time logic (mock)
-    let matchesTime = true;
-    if (filters.time === "now") {
-      // Mock check: pickupStart is soon?
+  // Initialize search term from URL params
+  useEffect(() => {
+    const searchParam = searchParams.get("search");
+    if (searchParam) {
+      setSearchTerm(searchParam);
     }
+  }, [searchParams]);
 
-    return matchesSearch && matchesCategory && matchesDietary && matchesTime;
-  });
+  // Filtering Logic
+  const filteredBags = useMemo(() => {
+    if (!bags) return [];
+    return bags.filter((bag) => {
+      const matchesSearch =
+        bag.vendorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        bag.title.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesCategory =
+        filters.categories.length === 0 ||
+        (bag.category && filters.categories.includes(bag.category));
+
+      const matchesDietary =
+        filters.dietary.length === 0 ||
+        bag.dietaryTags.some((tag) => filters.dietary.includes(tag));
+
+      // Simple time logic (mock)
+      let matchesTime = true;
+      if (filters.time === "now") {
+        // Mock check: pickupStart is soon?
+      }
+
+      return matchesSearch && matchesCategory && matchesDietary && matchesTime;
+    });
+  }, [bags, searchTerm, filters]);
+
+  // Create markers for map view (same as Map.tsx)
+  const mapMarkers: MarkerData[] = useMemo(() => {
+    if (!vendors || !filteredBags) return [];
+    return vendors
+      .filter((vendor: Vendor) => 
+        filteredBags.some((bag: SurpriseBag) => 
+          bag.vendorId === vendor.id && bag.status === 'active'
+        )
+      )
+      .map((vendor: Vendor) => {
+        const vendorBags = filteredBags.filter(
+          (bag: SurpriseBag) => bag.vendorId === vendor.id && bag.status === 'active'
+        );
+        const bagCount = vendorBags.length;
+        const minPrice = Math.min(...vendorBags.map(b => b.price));
+
+        return {
+          id: vendor.id,
+          lng: vendor.lng,
+          lat: vendor.lat,
+          title: `${vendor.name} - ${bagCount} bag${bagCount > 1 ? 's' : ''} from $${minPrice.toFixed(2)}`,
+          color: '#10b981', // Green color
+          count: bagCount,
+          bags: vendorBags.map((bag: SurpriseBag) => ({
+            id: bag.id,
+            title: bag.title,
+            price: bag.price,
+            vendorName: vendor.name,
+            vendorAddress: vendor.address,
+          })),
+        };
+      });
+  }, [vendors, filteredBags]);
 
   const toggleFilter = (type: "categories" | "dietary", value: string) => {
     setFilters((prev) => ({
@@ -475,7 +522,20 @@ const ConsumerHome: React.FC = () => {
           )}
         </motion.div>
       ) : (
-        <SingaporeMapView bags={filteredBags || []} vendors={vendors || []} />
+        <Card className="p-0 overflow-hidden">
+          <div className="h-[600px] md:h-[700px]">
+            <CountryGlobe
+              countryCenter={[103.8198, 1.3521]}
+              countryZoom={11}
+              maxBounds={[
+                [103.6, 1.22], // Southwest
+                [104.1, 1.48]  // Northeast
+              ]}
+              theme="satellite-streets-v12"
+              markers={mapMarkers}
+            />
+          </div>
+        </Card>
       )}
     </div>
   );
