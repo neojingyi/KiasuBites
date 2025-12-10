@@ -7,7 +7,8 @@ import { supabase } from "./supabase";
 export async function signInWithGoogle(): Promise<void> {
   if (!supabase) throw new Error("Supabase is not configured");
 
-  // Redirect back into the app; AuthProvider will pick up the session and ProtectedRoute will handle routing.
+  // Redirect back into the current origin; AuthProvider will hydrate the session and router will handle redirect.
+  // On production this will be your deployed origin; on dev it will be localhost with the current port.
   const redirectTo = window.location.origin + "/#/login";
   console.log("Initiating Google OAuth with redirectTo:", redirectTo);
 

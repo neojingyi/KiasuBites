@@ -51,7 +51,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           window.location.hash.includes("code")
         ) {
           try {
-            await supabase.auth.getSessionFromUrl({ storeSession: true });
+            const { data, error } = await supabase.auth.getSessionFromUrl({ storeSession: true });
+            console.log("getSessionFromUrl", { data, error });
+            // Clean up the URL (remove tokens) and send user to a sensible spot based on preferred role
+            const preferredRole = (localStorage.getItem("preferredRole") as UserRole | null) || UserRole.CONSUMER;
+            const fallbackPath = preferredRole === UserRole.VENDOR ? "/vendor/dashboard" : "/consumer/home";
+            const cleanHash = `#${fallbackPath}`;
+            window.history.replaceState({}, "", window.location.origin + cleanHash);
           } catch (err) {
             console.error("Failed to hydrate session from URL", err);
           }
