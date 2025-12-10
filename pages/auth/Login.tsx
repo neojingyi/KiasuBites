@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Button, Input, Card } from '../../components/UI';
 import { UserRole } from '../../types';
@@ -14,6 +14,7 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleRoleSelect = (selectedRole: UserRole) => {
@@ -48,7 +49,13 @@ const Login: React.FC = () => {
         },
         duration: 3000,
       });
-      navigate(role === UserRole.VENDOR ? '/vendor/dashboard' : '/consumer/home');
+      // Redirect to the page user came from, or default based on role
+      const from = (location.state as any)?.from;
+      if (from) {
+        navigate(from);
+      } else {
+        navigate(role === UserRole.VENDOR ? '/vendor/dashboard' : '/consumer/home');
+      }
     } catch (error) {
       toast.error('Login failed', {
         style: {

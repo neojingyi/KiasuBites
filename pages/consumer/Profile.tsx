@@ -34,9 +34,16 @@ const ConsumerProfile: React.FC = () => {
   const [selectedProfilePic, setSelectedProfilePic] = useState<number>(1);
   const [isSaving, setIsSaving] = useState(false);
   const [showProfilePicSelector, setShowProfilePicSelector] = useState(false);
+  const selectedProfileSrc =
+    profilePictures.find((pic) => pic.id === selectedProfilePic)?.src ||
+    user?.profilePictureUrl;
 
   useEffect(() => {
     if (user) {
+      console.log('Profile page: User loaded:', user);
+      console.log('Profile page: Profile picture URL:', user.profilePictureUrl);
+      console.log('Profile page: Has profile picture?', !!user.profilePictureUrl);
+      
       setFormData({
         name: user.name || '',
         email: user.email || '',
@@ -46,13 +53,42 @@ const ConsumerProfile: React.FC = () => {
       
       // Find which profile picture is currently selected
       if (user.profilePictureUrl) {
-        const currentPic = profilePictures.find(pic => pic.src === user.profilePictureUrl);
-        if (currentPic) {
-          setSelectedProfilePic(currentPic.id);
+        console.log('Profile page: Looking for matching profile picture...');
+        console.log('Profile page: User profile picture URL:', user.profilePictureUrl);
+        console.log('Profile page: Available profile pictures:', profilePictures.map(p => ({ id: p.id, src: p.src })));
+        
+        // Try exact match first
+        let currentPic = profilePictures.find(pic => pic.src === user.profilePictureUrl);
+        // If no exact match, try comparing string representations
+        if (!currentPic) {
+          currentPic = profilePictures.find(pic => String(pic.src) === String(user.profilePictureUrl));
         }
+        // If still no match, try checking if URLs contain similar paths
+        if (!currentPic && user.profilePictureUrl) {
+          const urlStr = String(user.profilePictureUrl);
+          currentPic = profilePictures.find(pic => {
+            const picStr = String(pic.src);
+            // Check if URLs match by comparing paths (ignoring query params/hashes)
+            const picPath = picStr.split('?')[0].split('#')[0];
+            const urlPath = urlStr.split('?')[0].split('#')[0];
+            return picPath === urlPath || picStr.includes(urlStr) || urlStr.includes(picStr);
+          });
+        }
+        if (currentPic) {
+          console.log('Profile page: Found matching picture:', currentPic.id);
+          setSelectedProfilePic(currentPic.id);
+        } else {
+          console.log('Profile page: No matching picture found, using default');
+          console.log('Profile page: User URL:', user.profilePictureUrl);
+          console.log('Profile page: Available URLs:', profilePictures.map(p => String(p.src)));
+          setSelectedProfilePic(1);
+        }
+      } else {
+        console.log('Profile page: No profile picture URL, using default');
+        setSelectedProfilePic(1);
       }
     }
-  }, [user]);
+  }, [user, user?.profilePictureUrl]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -105,11 +141,24 @@ const ConsumerProfile: React.FC = () => {
       <Card className="p-6 space-y-4">
         <div className="flex items-center gap-4">
           <div className="relative">
-            {user?.profilePictureUrl ? (
+            {selectedProfileSrc ? (
               <img
-                src={user.profilePictureUrl}
-                alt={user.name}
+                key={`profile-pic-${user?.id}-${selectedProfileSrc}`} // Force re-render when URL changes
+                src={selectedProfileSrc}
+                alt={user?.name}
                 className="w-16 h-16 rounded-full object-cover border-2 border-primary-600"
+                onError={(e) => {
+                  console.error('Profile picture failed to load in Profile page:', selectedProfileSrc);
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const fallback = target.nextElementSibling as HTMLElement;
+                  if (fallback) {
+                    fallback.style.display = 'flex';
+                  }
+                }}
+                onLoad={() => {
+                  console.log('✅ Profile picture loaded successfully in Profile page:', selectedProfileSrc);
+                }}
               />
             ) : (
               <div className="w-16 h-16 rounded-full bg-primary-200 flex items-center justify-center text-primary-700 text-2xl font-bold">

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
@@ -18,10 +18,21 @@ import { motion } from "framer-motion";
 const BagDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
+
+  const handleReserveClick = () => {
+    if (!user) {
+      toast.error("Please sign in to reserve a bag");
+      // Save current location so we can redirect back after login
+      navigate("/login", { state: { from: location.pathname } });
+      return;
+    }
+    setIsConfirmOpen(true);
+  };
 
   const { data: bag, isLoading } = useQuery({
     queryKey: ["bag", id],
@@ -250,7 +261,7 @@ const BagDetails: React.FC = () => {
             <Button
               size="lg"
               className="w-full md:w-auto px-10"
-              onClick={() => setIsConfirmOpen(true)}
+              onClick={handleReserveClick}
               disabled={bag.quantity === 0}
             >
               {bag.quantity === 0

@@ -30,6 +30,7 @@ const Register: React.FC = () => {
   const [step, setStep] = useState<'role' | 'form'>('role');
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
+  const [address, setAddress] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<UserRole | null>(null);
   const [selectedProfilePic, setSelectedProfilePic] = useState<number>(1);
@@ -45,13 +46,20 @@ const Register: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!role || !name || !email || !password) return;
+    // For vendors, address is required
+    if (role === UserRole.VENDOR && !address) {
+      toast.error('Please enter your business address');
+      return;
+    }
     
     setIsSubmitting(true);
     try {
       // Use the actual imported image source (Vite will process this correctly)
       const selectedPic = profilePictures.find(pic => pic.id === selectedProfilePic);
       const profilePictureUrl = selectedPic?.src || profilePictures[0].src;
-      await register(email, password, name, role, profilePictureUrl);
+      console.log('Registering with profile picture:', profilePictureUrl);
+      console.log('Profile picture URL type:', typeof profilePictureUrl);
+      await register(email, password, name, role, profilePictureUrl, address);
       toast.success('Account created successfully!', {
         style: {
           background: 'rgba(255, 255, 255, 0.95)',
@@ -164,8 +172,8 @@ const Register: React.FC = () => {
             </div>
 
             <Input 
-              label="Full Name" 
-              placeholder="John Doe"
+              label={role === UserRole.VENDOR ? "Business Name" : "Full Name"} 
+              placeholder={role === UserRole.VENDOR ? "My Bakery" : "John Doe"}
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -177,6 +185,15 @@ const Register: React.FC = () => {
               onChange={(e) => setEmail(e.target.value)}
               required
             />
+            {role === UserRole.VENDOR && (
+              <Input 
+                label="Business Address" 
+                placeholder="123 Main Street, Singapore 123456"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                required
+              />
+            )}
             <Input 
               label="Password" 
               type="password"

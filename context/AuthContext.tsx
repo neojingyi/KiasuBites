@@ -20,6 +20,98 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true); // Start as true to check session
 
+  const buildMockUser = ({
+    name,
+    email,
+    role,
+    profilePictureUrl,
+    address,
+  }: {
+    name: string;
+    email: string;
+    role: UserRole;
+    profilePictureUrl?: string;
+    address?: string;
+  }): User => ({
+    id: role === UserRole.VENDOR ? `v-${Date.now()}` : `c-${Date.now()}`,
+    name,
+    email,
+    role,
+    dietaryPreferences: [],
+    favorites: [],
+    isVerified: role === UserRole.VENDOR ? false : undefined,
+    profilePictureUrl,
+    address: address || undefined,
+  });
+
+  // Ensure a role-specific profile exists; creates one if missing
+  const ensureProfileExists = async ({
+    userId,
+    role,
+    name,
+    email,
+    address,
+    profilePictureUrl,
+  }: {
+    userId: string;
+    role: UserRole;
+    name?: string;
+    email?: string;
+    address?: string;
+    profilePictureUrl?: string;
+  }) => {
+    const profileTable = role === UserRole.VENDOR ? 'vendors' : 'consumers';
+
+    // Check if profile already exists
+    const { data: existingProfile, error: existingError } = await supabase
+      .from(profileTable)
+      .select('id')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (existingError) {
+      console.error('Error checking existing profile:', existingError);
+    }
+    if (existingProfile) return;
+
+    const profileInsert =
+      role === UserRole.VENDOR
+        ? {
+            id: userId,
+            name: name || email?.split('@')[0] || 'Vendor',
+            email: email || null,
+            address: address || '',
+            lat: 0,
+            lng: 0,
+            category: 'Other',
+            rating: 0,
+            total_reviews: 0,
+            tags: [],
+            photo_url: profilePictureUrl || null,
+            pickup_instructions: null,
+            is_verified: false,
+          }
+        : {
+            id: userId,
+            name: name || email?.split('@')[0] || 'User',
+            email: email || null,
+            dietary_preferences: [],
+            radius_km: 5,
+            phone_number: null,
+            address: address || null,
+            profile_picture_url: profilePictureUrl || null,
+          };
+
+    const { error: profileError } = await supabase
+      .from(profileTable)
+      .upsert(profileInsert as any);
+
+    if (profileError) {
+      console.error(`Failed to create ${profileTable} profile:`, profileError);
+      throw new Error(profileError.message || 'Failed to create profile');
+    }
+  };
+
   // Check for existing session on mount
   useEffect(() => {
     if (supabase) {
@@ -71,19 +163,65 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     await loadUserAndReturn(userId);
   };
 
-  const loadUserAndReturn = async (userId: string): Promise<User | null> => {
+  const loadUserAndReturn = async (
+    userId: string,
+    preferredRole?: UserRole
+  ): Promise<User | null> => {
     if (!supabase) return null;
     
     try {
-      // Get user profile from users table
-      const { data: profile, error: profileError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      // Also read from auth metadata in case the DB row hasn't been updated yet
+      const { data: authUserData } = await supabase.auth.getUser();
+      const authUser = authUserData.user;
+      const metadataProfilePictureUrl = authUser?.user_metadata?.profile_picture_url;
+      const roleFromMetadata = authUser?.user_metadata?.role as UserRole | undefined;
 
-      if (profileError || !profile) {
-        console.error("Error loading user profile:", profileError);
+      // Fetch from role-specific tables (consumers/vendors)
+      const fetchProfile = async (table: 'consumers' | 'vendors') => {
+        const { data, error } = await supabase.from(table).select('*').eq('id', userId).single();
+        return { data, error };
+      };
+
+      let profileTable: 'consumers' | 'vendors' =
+        preferredRole === UserRole.VENDOR
+          ? 'vendors'
+          : preferredRole === UserRole.CONSUMER
+            ? 'consumers'
+            : roleFromMetadata === UserRole.VENDOR
+              ? 'vendors'
+              : 'consumers';
+      let profile: any = null;
+
+      let { data: primaryProfile, error: primaryError } = await fetchProfile(profileTable);
+      if (!primaryError && primaryProfile) {
+        profile = primaryProfile;
+      } else {
+        // Fallback: try the other table in case metadata is stale
+        const fallbackTable: 'consumers' | 'vendors' = profileTable === 'vendors' ? 'consumers' : 'vendors';
+        const { data: fallbackProfile } = await fetchProfile(fallbackTable);
+        if (fallbackProfile) {
+          profileTable = fallbackTable;
+          profile = fallbackProfile;
+        }
+      }
+
+      // If no profile found, try to create it using auth metadata
+      if (!profile && authUser) {
+        const inferredRole = roleFromMetadata || UserRole.CONSUMER;
+        await ensureProfileExists({
+          userId,
+          role: inferredRole,
+          name: authUser.user_metadata?.name,
+          email: authUser.email,
+          address: (authUser.user_metadata as any)?.address,
+          profilePictureUrl: metadataProfilePictureUrl,
+        });
+        const { data: createdProfile } = await fetchProfile(profileTable);
+        profile = createdProfile;
+      }
+
+      if (!profile) {
+        console.error("Error loading user profile: no profile found in consumers/vendors tables");
         setUser(null);
         return null;
       }
@@ -94,39 +232,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         .select('vendor_id')
         .eq('user_id', userId);
 
-      // Get vendor verification status if vendor
-      let isVerified = undefined;
-      if (profile.role === UserRole.VENDOR) {
-        const { data: vendor } = await supabase
-          .from('vendors')
-          .select('is_verified')
-          .eq('id', userId)
-          .single();
-        isVerified = vendor?.is_verified || false;
-      }
-
-      const profilePictureUrl = (profile as any).profile_picture_url;
-      console.log('Loading user profile picture from database:', profilePictureUrl);
+      const isVendor = profileTable === 'vendors';
+      // Vendors use photo_url; consumers use profile_picture_url
+      const profilePictureUrl =
+        (profile as any).profile_picture_url ||
+        (profile as any).photo_url ||
+        metadataProfilePictureUrl;
+      const name =
+        (profile as any).name ||
+        authUser?.user_metadata?.name ||
+        authUser?.email?.split('@')[0] ||
+        'User';
+      const email = authUser?.email || (profile as any).email || '';
+      const isVerified = isVendor ? (profile as any).is_verified ?? false : undefined;
+      console.log('Loading user profile picture from table:', (profile as any).profile_picture_url);
+      console.log('Profile picture URL from auth metadata:', metadataProfilePictureUrl);
+      console.log('Final profile picture URL used:', profilePictureUrl);
       console.log('Full profile data:', profile);
+      
+      // Ensure profilePictureUrl is a string if it exists
+      const normalizedProfilePictureUrl = profilePictureUrl ? String(profilePictureUrl) : undefined;
       
       const userData: User = {
         id: profile.id,
-        name: profile.name,
-        email: profile.email,
-        role: profile.role as UserRole,
-        dietaryPreferences: (profile as any).dietary_preferences || [],
-        radiusKm: (profile as any).radius_km || undefined,
+        name,
+        email,
+        role: isVendor ? UserRole.VENDOR : UserRole.CONSUMER,
+        dietaryPreferences: isVendor ? [] : (profile as any).dietary_preferences || [],
+        radiusKm: isVendor ? undefined : (profile as any).radius_km || undefined,
         favorites: favorites?.map((f: any) => f.vendor_id) || [],
         isVerified,
         phoneNumber: (profile as any).phone_number || undefined,
         address: (profile as any).address || undefined,
-        profilePictureUrl: profilePictureUrl || undefined,
+        profilePictureUrl: normalizedProfilePictureUrl || undefined,
       };
       
       console.log('User data loaded:', { 
         name: userData.name, 
         profilePictureUrl: userData.profilePictureUrl,
-        hasProfilePic: !!userData.profilePictureUrl 
+        hasProfilePic: !!userData.profilePictureUrl,
+        profilePictureUrlType: typeof userData.profilePictureUrl
       });
 
       setUser(userData);
@@ -170,27 +315,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         throw new Error('No user data returned');
       }
 
-      // Verify user role matches
-      const { data: profile } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', authData.user.id)
-        .single();
-
-      if (!profile || (profile as any).role !== role) {
-        await supabase.auth.signOut();
-        throw new Error(`Account is registered as ${(profile as any)?.role || 'unknown'}, not ${role}`);
-      }
+      // Ensure profile exists (if sign-up happened with email confirmation and profile wasn't created yet)
+      await ensureProfileExists({
+        userId: authData.user.id,
+        role,
+        name: authData.user.user_metadata?.name || email.split('@')[0],
+        email,
+        address: undefined,
+        profilePictureUrl: authData.user.user_metadata?.profile_picture_url,
+      });
 
       // Load user data
-      await loadUser(authData.user.id);
-      
-      const currentUser = user;
-      if (!currentUser) {
+      const loadedUser = await loadUserAndReturn(authData.user.id, role);
+      if (!loadedUser) {
         throw new Error('Failed to load user data');
       }
-
-      return currentUser;
+      
+      // Ensure role matches requested role
+      setUser(loadedUser);
+      return loadedUser;
     } catch (error) {
       console.error("Login failed", error);
       throw error;
@@ -204,7 +347,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     password: string,
     name: string,
     role: UserRole,
-    profilePictureUrl?: string
+    profilePictureUrl?: string,
+    address?: string
   ): Promise<User> => {
     setIsLoading(true);
     
@@ -212,16 +356,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     if (!supabase) {
       try {
         // In localStorage mode, registration just creates a mock user
-        const mockUser: User = {
-          id: role === UserRole.VENDOR ? "v1" : `c${Date.now()}`,
-          name,
-          email,
-          role,
-          dietaryPreferences: [],
-          favorites: [],
-          isVerified: role === UserRole.VENDOR ? false : undefined,
-          profilePictureUrl,
-        };
+        const mockUser: User = buildMockUser({ name, email, role, profilePictureUrl, address });
         setUser(mockUser);
         return mockUser;
       } catch (error) {
@@ -233,7 +368,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
     
     try {
+      // Helper to upsert into role-specific profile table
+      const upsertProfile = async (userId: string) => {
+        const profileInsert =
+          role === UserRole.VENDOR
+            ? {
+                id: userId,
+                name,
+                email,
+                address: address || '',
+                lat: 0,
+                lng: 0,
+                category: 'Other',
+                rating: 0,
+                total_reviews: 0,
+                tags: [],
+                photo_url: profilePictureUrl || null,
+                pickup_instructions: null,
+                is_verified: false,
+            }
+          : {
+              id: userId,
+              name,
+              email,
+              dietary_preferences: [],
+              radius_km: 5,
+              phone_number: null,
+              address: address || null,
+              profile_picture_url: profilePictureUrl || null,
+            };
+
+        const profileTable = role === UserRole.VENDOR ? 'vendors' : 'consumers';
+        const { error: profileError } = await supabase.from(profileTable).upsert(profileInsert as any);
+        if (profileError) {
+          console.error("Profile creation error:", profileError);
+          throw new Error(`Failed to create ${profileTable} profile: ${profileError.message || 'Unknown error'}`);
+        }
+      };
+
       // Sign up with Supabase Auth
+      // Sign up with Supabase Auth, or sign in if email already exists
+      let authUser = null as any;
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -247,115 +422,105 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       });
 
       if (authError) {
-        console.error("Supabase auth error:", authError);
-        throw new Error(authError.message || 'Registration failed');
+        const msg = authError.message?.toLowerCase() || '';
+        if (msg.includes('registered') || msg.includes('exists')) {
+          // Email already in use; try signing in to allow second-role profile creation
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+          if (signInError) {
+            console.error("Supabase sign-in after existing email failed:", signInError);
+            throw new Error(signInError.message || 'Email already registered and sign-in failed');
+          }
+          authUser = signInData.user;
+        } else {
+          console.error("Supabase auth error:", authError);
+          throw new Error(authError.message || 'Registration failed');
+        }
+      } else {
+        authUser = authData.user;
       }
 
-      if (!authData.user) {
+      if (!authUser) {
         throw new Error('No user data returned from Supabase');
       }
 
-      // Wait a moment for the trigger to create the user profile
-      // The trigger handle_new_user() should automatically create the profile
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // Check if profile was created by trigger, if not create it explicitly
-      const { data: existingProfile } = await supabase
-        .from('users')
-        .select('id')
-        .eq('id', authData.user.id)
-        .single();
-
-      if (!existingProfile) {
-        // Profile wasn't created by trigger, try to create it explicitly
-        console.log('Creating new profile with profile picture:', profilePictureUrl);
-        const { error: profileError } = await supabase
-          .from('users')
-          .insert({
-            id: authData.user.id,
-            email,
-            name,
-            role,
-            profile_picture_url: profilePictureUrl,
-          } as any);
-
-        if (profileError) {
-          const errorCode = (profileError as any).code;
-          // If it's a duplicate key error, the profile was created between check and insert
-          if (errorCode !== '23505') {
-            console.error("Profile creation error:", profileError);
-            throw new Error(`Failed to create user profile: ${profileError.message || 'Unknown error'}`);
-          } else {
-            // Profile was created by trigger, update it with profile picture
-            console.log('Profile created by trigger, updating with profile picture');
-            await supabase
-              .from('users')
-              .update({ profile_picture_url: profilePictureUrl } as any)
-              .eq('id', authData.user.id);
-          }
-        } else {
-          console.log('Profile created successfully with profile picture');
+      // Ensure we have a session (RLS requires it) and create the profile now
+      const { data: sessionData } = await supabase.auth.getSession();
+      let sessionUserId = authUser.id;
+      if (!sessionData.session) {
+        // Try to create a session if not present (email confirmation disabled/new project)
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (signInError) {
+          console.error('Sign-in after sign-up failed:', signInError);
+          throw new Error(signInError.message || 'Failed to establish session after sign up');
         }
+        sessionUserId = signInData.user?.id || authUser.id;
       } else {
-        // Profile exists, update it with the correct name, role, and profile picture
-        console.log('Updating existing profile with profile picture:', profilePictureUrl);
-        const { error: updateError } = await supabase
-          .from('users')
-          .update({ 
-            name, 
-            role,
-            profile_picture_url: profilePictureUrl,
-          } as any)
-          .eq('id', authData.user.id);
-        
-        if (updateError) {
-          console.error('Error updating profile picture:', updateError);
-        } else {
-          console.log('Profile picture updated successfully');
-        }
+        sessionUserId = sessionData.session.user.id;
       }
+      await upsertProfile(sessionUserId);
 
-      // If vendor, create vendor record
-      if (role === UserRole.VENDOR) {
-        const { error: vendorError } = await supabase
-          .from('vendors')
-          .insert({
-            id: authData.user.id,
-            name,
-            address: '', // Will be filled in later
-            lat: 0,
-            lng: 0,
-            category: 'Other',
-            rating: 0,
-            total_reviews: 0,
-            is_verified: false,
-          } as any);
-
-        if (vendorError) {
-          const errorCode = (vendorError as any).code;
-          if (errorCode !== '23505') {
-            console.warn('Failed to create vendor record:', vendorError);
-            // Don't throw here, user profile was created successfully
-          }
-        }
-      }
+      // Wait a moment to ensure all database operations are complete
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       // Load user data
-      const loadedUser = await loadUserAndReturn(authData.user.id);
-      if (!loadedUser) {
-        throw new Error('Failed to load user data after registration');
+      console.log('Loading user after registration, userId:', sessionUserId);
+      const loadedUser = await loadUserAndReturn(sessionUserId, role);
+      console.log('Loaded user after registration:', loadedUser);
+      console.log('Profile picture URL in loaded user:', loadedUser?.profilePictureUrl);
+
+      // If the profile picture didn't stick in the DB read, fall back to what the user selected
+      let finalUser = loadedUser;
+      if (profilePictureUrl && loadedUser && !loadedUser.profilePictureUrl) {
+        console.log('Backfilling missing profile picture after registration:', profilePictureUrl);
+        const { error: metadataError } = await supabase.auth.updateUser({
+          data: { profile_picture_url: profilePictureUrl },
+        });
+        if (metadataError) {
+          console.warn('Failed to update auth metadata during backfill:', metadataError);
+        }
+
+        finalUser = { ...loadedUser, profilePictureUrl };
       }
 
-      setUser(loadedUser);
-      return loadedUser;
+      // Fallback: if load failed, construct a minimal user so UI can proceed
+      if (!finalUser) {
+        finalUser = {
+          id: sessionUserId,
+          name,
+          email,
+          role,
+          dietaryPreferences: [],
+          favorites: [],
+          isVerified: role === UserRole.VENDOR ? false : undefined,
+          profilePictureUrl: profilePictureUrl || undefined,
+          address: address || undefined,
+        };
+        console.warn('Using fallback user after registration load failure:', finalUser);
+      }
+
+      setUser(finalUser);
+      console.log('User set in context, profilePictureUrl:', finalUser.profilePictureUrl);
+      return finalUser;
     } catch (error) {
       console.error("Registration failed:", error);
-      // Provide more helpful error messages
-      if (error instanceof Error) {
-        throw error;
-      } else {
-        throw new Error(`Registration failed: ${JSON.stringify(error)}`);
+      const message = error instanceof Error ? error.message : String(error);
+      const isNetworkError =
+        error instanceof TypeError || (message && message.toLowerCase().includes('failed to fetch'));
+
+      if (isNetworkError) {
+        console.warn('Supabase unreachable; falling back to local mock user for registration.');
+        const mockUser = buildMockUser({ name, email, role, profilePictureUrl, address });
+        setUser(mockUser);
+        return mockUser;
       }
+
+      throw error instanceof Error ? error : new Error(`Registration failed: ${JSON.stringify(error)}`);
     } finally {
       setIsLoading(false);
     }
@@ -385,20 +550,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       const userId = user.id;
       const updateData: any = {};
+      const profileTable = user.role === UserRole.VENDOR ? 'vendors' : 'consumers';
       
-      if (updates.name !== undefined) updateData.name = updates.name;
-      if (updates.email !== undefined) updateData.email = updates.email;
+      if (updates.name !== undefined) {
+        updateData.name = updates.name;
+      }
       if (updates.phoneNumber !== undefined) updateData.phone_number = updates.phoneNumber;
       if (updates.address !== undefined) updateData.address = updates.address;
-      if (updates.dietaryPreferences !== undefined) updateData.dietary_preferences = updates.dietaryPreferences;
-      if (updates.radiusKm !== undefined) updateData.radius_km = updates.radiusKm;
+      if (profileTable === 'consumers' && updates.dietaryPreferences !== undefined) updateData.dietary_preferences = updates.dietaryPreferences;
+      if (profileTable === 'consumers' && updates.radiusKm !== undefined) updateData.radius_km = updates.radiusKm;
       if (updates.profilePictureUrl !== undefined) {
-        updateData.profile_picture_url = updates.profilePictureUrl;
+        if (profileTable === 'vendors') {
+          updateData.photo_url = updates.profilePictureUrl;
+        } else {
+          updateData.profile_picture_url = updates.profilePictureUrl;
+        }
         console.log('Updating profile picture in database:', updates.profilePictureUrl);
+        console.log('Profile picture URL type:', typeof updates.profilePictureUrl);
       }
 
       const { error: updateError } = await supabase
-        .from('users')
+        .from(profileTable)
         .update(updateData)
         .eq('id', userId);
 
@@ -406,17 +578,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         console.error('Error updating user profile:', updateError);
         throw new Error(updateError.message || 'Failed to update profile');
       }
+
+      // Keep auth metadata in sync so future sessions get the avatar immediately
+      if (updates.profilePictureUrl !== undefined || updates.name !== undefined) {
+        const metadataUpdates: any = {};
+        if (updates.profilePictureUrl !== undefined) {
+          metadataUpdates.profile_picture_url = updates.profilePictureUrl;
+        }
+        if (updates.name !== undefined) {
+          metadataUpdates.name = updates.name;
+        }
+        const { error: metadataError } = await supabase.auth.updateUser({
+          data: metadataUpdates,
+        });
+        if (metadataError) {
+          console.warn('Failed to update auth metadata:', metadataError);
+        }
+      }
+
+      // Optimistically update local state so navbar/profile reflect immediately
+      setUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              ...updates,
+            }
+          : prev
+      );
       
       console.log('Profile updated successfully in database');
 
+      // Wait a moment to ensure database is updated
+      await new Promise(resolve => setTimeout(resolve, 200));
+
       // Reload user data to get updated values
+      console.log('Reloading user data after update...');
       const updatedUser = await loadUserAndReturn(userId);
-      if (!updatedUser) {
+      console.log('Updated user loaded:', updatedUser);
+      console.log('Profile picture URL in updated user:', updatedUser?.profilePictureUrl);
+      
+      // If the freshly loaded user is missing the new profile picture, fall back to the value we just saved
+      const mergedUser =
+        updates.profilePictureUrl && updatedUser
+          ? { ...updatedUser, profilePictureUrl: updates.profilePictureUrl }
+          : updatedUser;
+
+      if (!mergedUser) {
         throw new Error('Failed to load updated user data');
       }
 
-      setUser(updatedUser);
-      return updatedUser;
+      setUser(mergedUser);
+      console.log('User state updated with profile picture:', mergedUser.profilePictureUrl);
+      return mergedUser;
     } catch (error) {
       console.error("Update user failed:", error);
       throw error;

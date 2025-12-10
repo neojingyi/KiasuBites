@@ -234,8 +234,8 @@ const MOCK_BAGS: SurpriseBag[] = [
     vendorCategory: "Bakery",
     title: "Pastry Surprise",
     description: "A mix of croissants, danishes, and muffins.",
-    price: 5.5,
-    originalPrice: 15.0,
+    price: 4.5,
+    originalPrice: 12.0,
     pickupStart: "20:00",
     pickupEnd: "21:30",
     quantity: 5,
@@ -252,8 +252,8 @@ const MOCK_BAGS: SurpriseBag[] = [
     vendorCategory: "Japanese",
     title: "Sushi Platter Ends",
     description: "Assorted sushi rolls and nigiri.",
-    price: 8.9,
-    originalPrice: 22.0,
+    price: 4.8,
+    originalPrice: 14.0,
     pickupStart: "21:30",
     pickupEnd: "22:30",
     quantity: 2,
@@ -270,8 +270,8 @@ const MOCK_BAGS: SurpriseBag[] = [
     vendorCategory: "Restaurant",
     title: "Healthy Salad Mix",
     description: "Fresh salad bases and toppings.",
-    price: 6.0,
-    originalPrice: 14.0,
+    price: 3.5,
+    originalPrice: 10.0,
     pickupStart: "14:00",
     pickupEnd: "15:00",
     quantity: 8,
@@ -306,8 +306,8 @@ const MOCK_BAGS: SurpriseBag[] = [
     vendorCategory: "Chinese",
     title: "Dim Sum Surprise",
     description: "Mixed dim sum selection.",
-    price: 7.5,
-    originalPrice: 18.0,
+    price: 4.2,
+    originalPrice: 13.0,
     pickupStart: "20:00",
     pickupEnd: "21:00",
     quantity: 4,
@@ -324,8 +324,8 @@ const MOCK_BAGS: SurpriseBag[] = [
     vendorCategory: "Indian",
     title: "Curry Combo",
     description: "Assorted curries with rice and naan.",
-    price: 8.0,
-    originalPrice: 20.0,
+    price: 4.9,
+    originalPrice: 15.0,
     pickupStart: "21:00",
     pickupEnd: "22:00",
     quantity: 5,
@@ -342,8 +342,8 @@ const MOCK_BAGS: SurpriseBag[] = [
     vendorCategory: "Korean",
     title: "Korean BBQ Set",
     description: "Marinated meats with banchan sides.",
-    price: 9.5,
-    originalPrice: 24.0,
+    price: 5.0,
+    originalPrice: 16.0,
     pickupStart: "21:30",
     pickupEnd: "22:30",
     quantity: 3,
@@ -360,8 +360,8 @@ const MOCK_BAGS: SurpriseBag[] = [
     vendorCategory: "Italian",
     title: "Pasta Variety Pack",
     description: "Mixed pasta dishes with sauces.",
-    price: 7.0,
-    originalPrice: 16.0,
+    price: 4.0,
+    originalPrice: 12.0,
     pickupStart: "20:30",
     pickupEnd: "21:30",
     quantity: 6,
@@ -378,8 +378,8 @@ const MOCK_BAGS: SurpriseBag[] = [
     vendorCategory: "Dessert",
     title: "Dessert Sampler",
     description: "Assorted cakes, cookies, and pastries.",
-    price: 5.5,
-    originalPrice: 13.0,
+    price: 4.5,
+    originalPrice: 12.0,
     pickupStart: "19:00",
     pickupEnd: "20:00",
     quantity: 7,
@@ -396,8 +396,8 @@ const MOCK_BAGS: SurpriseBag[] = [
     vendorCategory: "Groceries",
     title: "Fresh Produce Box",
     description: "Mixed vegetables and fruits.",
-    price: 6.5,
-    originalPrice: 15.0,
+    price: 3.5,
+    originalPrice: 10.0,
     pickupStart: "18:00",
     pickupEnd: "19:00",
     quantity: 10,
@@ -414,8 +414,8 @@ const MOCK_BAGS: SurpriseBag[] = [
     vendorCategory: "Fast Food",
     title: "Burger Combo Pack",
     description: "Assorted burgers and sides.",
-    price: 8.5,
-    originalPrice: 21.0,
+    price: 4.8,
+    originalPrice: 14.0,
     pickupStart: "21:00",
     pickupEnd: "22:00",
     quantity: 4,
@@ -432,8 +432,8 @@ const MOCK_BAGS: SurpriseBag[] = [
     vendorCategory: "Bakery",
     title: "Afternoon Tea Set",
     description: "Scones, sandwiches, and pastries.",
-    price: 6.0,
-    originalPrice: 14.0,
+    price: 3.9,
+    originalPrice: 11.0,
     pickupStart: "17:00",
     pickupEnd: "18:00",
     quantity: 5,
@@ -450,8 +450,8 @@ const MOCK_BAGS: SurpriseBag[] = [
     vendorCategory: "Chinese",
     title: "Noodle Variety Pack",
     description: "Mixed noodle dishes.",
-    price: 7.0,
-    originalPrice: 17.0,
+    price: 4.2,
+    originalPrice: 13.0,
     pickupStart: "20:00",
     pickupEnd: "21:00",
     quantity: 6,
@@ -468,8 +468,8 @@ const MOCK_BAGS: SurpriseBag[] = [
     vendorCategory: "Japanese",
     title: "Sashimi Selection",
     description: "Fresh sashimi platter.",
-    price: 12.0,
-    originalPrice: 28.0,
+    price: 5.0,
+    originalPrice: 16.0,
     pickupStart: "22:00",
     pickupEnd: "23:00",
     quantity: 2,
@@ -486,8 +486,8 @@ const MOCK_BAGS: SurpriseBag[] = [
     vendorCategory: "Chinese",
     title: "Rice Bowl Mix",
     description: "Various rice bowl combinations.",
-    price: 6.5,
-    originalPrice: 15.0,
+    price: 3.8,
+    originalPrice: 11.0,
     pickupStart: "19:30",
     pickupEnd: "20:30",
     quantity: 7,
@@ -632,10 +632,10 @@ export const api = {
     // Simulating user retrieval
     const existingUser = localStorage.getItem(KEYS.CURRENT_USER);
     let user = existingUser ? JSON.parse(existingUser) : null;
-
+    
     // If mocking a fresh login for vendor, check verification status
     if (!user || user.role !== role) {
-      user = {
+       user = {
         id: role === UserRole.VENDOR ? "v1" : "c1",
         name: role === UserRole.VENDOR ? "Bread & Butter Bakery" : "Alex Wang",
         email,
@@ -645,15 +645,15 @@ export const api = {
         favorites: [],
         isVerified: role === UserRole.VENDOR ? false : undefined, // Default unverified for demo
       };
-
+      
       // If V1 login, check if actually verified in mock vendor DB
       if (role === UserRole.VENDOR) {
         const vendors = JSON.parse(localStorage.getItem(KEYS.VENDORS) || "[]");
         const v = vendors.find((v: Vendor) => v.id === "v1");
-        if (v && v.businessInfo) user.isVerified = true;
+         if (v && v.businessInfo) user.isVerified = true;
       }
     }
-
+    
     localStorage.setItem(KEYS.CURRENT_USER, JSON.stringify(user));
     return user;
   },
@@ -681,12 +681,12 @@ export const api = {
     await delay(200);
     const user = api.getCurrentUser();
     if (!user) throw new Error("No user");
-
+    
     const favorites = user.favorites || [];
-    const newFavorites = favorites.includes(vendorId)
+    const newFavorites = favorites.includes(vendorId) 
       ? favorites.filter((id) => id !== vendorId)
       : [...favorites, vendorId];
-
+    
     const updated = { ...user, favorites: newFavorites };
     localStorage.setItem(KEYS.CURRENT_USER, JSON.stringify(updated));
     return updated;
@@ -713,28 +713,28 @@ export const api = {
   },
 
   getVendorById: async (id: string): Promise<Vendor | undefined> => {
-    await delay(300);
+     await delay(300);
     const vendors = JSON.parse(localStorage.getItem(KEYS.VENDORS) || "[]");
-    return vendors.find((v: Vendor) => v.id === id);
+     return vendors.find((v: Vendor) => v.id === id);
   },
 
   getFavoriteVendors: async (
     userId: string
   ): Promise<{ vendor: Vendor; bags: SurpriseBag[] }[]> => {
-    await delay(500);
-    const user = api.getCurrentUser();
+     await delay(500);
+     const user = api.getCurrentUser();
     const allVendors = JSON.parse(localStorage.getItem(KEYS.VENDORS) || "[]");
     const allBags = JSON.parse(localStorage.getItem(KEYS.BAGS) || "[]");
 
-    const favs = user?.favorites || [];
-    const vendors = allVendors.filter((v: Vendor) => favs.includes(v.id));
-
-    return vendors.map((v: Vendor) => ({
-      vendor: v,
+     const favs = user?.favorites || [];
+     const vendors = allVendors.filter((v: Vendor) => favs.includes(v.id));
+     
+     return vendors.map((v: Vendor) => ({
+       vendor: v,
       bags: allBags.filter(
         (b: SurpriseBag) => b.vendorId === v.id && b.status === "active"
       ),
-    }));
+     }));
   },
 
   createOrder: async (
@@ -811,7 +811,7 @@ export const api = {
     if (index !== -1) {
       vendors[index].businessInfo = info;
       localStorage.setItem(KEYS.VENDORS, JSON.stringify(vendors));
-
+      
       // Update session user to verified
       const currentUser = api.getCurrentUser();
       if (currentUser && currentUser.role === UserRole.VENDOR) {
@@ -886,10 +886,10 @@ export const api = {
   },
 
   getVendorReviews: async (vendorId: string): Promise<Order[]> => {
-    await delay(500);
+     await delay(500);
     const orders = JSON.parse(localStorage.getItem(KEYS.ORDERS) || "[]");
-    // In a real app we'd join user names, but mock Order has consumerId.
-    // We will filter orders for this vendor that have ratings.
+     // In a real app we'd join user names, but mock Order has consumerId. 
+     // We will filter orders for this vendor that have ratings.
     return orders
       .filter((o: Order) => o.vendorId === vendorId && o.rating)
       .reverse();

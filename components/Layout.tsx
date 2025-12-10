@@ -74,7 +74,6 @@ const Layout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
 
     if (user.role === "vendor") {
       return [
-        { name: "Dashboard", link: "/vendor/dashboard" },
         { name: "Bags", link: "/vendor/bags" },
         { name: "Orders", link: "/vendor/orders" },
         { name: "Reviews", link: "/vendor/reviews" },

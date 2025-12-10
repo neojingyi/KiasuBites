@@ -39,6 +39,9 @@ const VendorSettingsPage: React.FC = () => {
   const [selectedProfilePic, setSelectedProfilePic] = useState<number>(1);
   const [showProfilePicSelector, setShowProfilePicSelector] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const selectedProfileSrc =
+    profilePictures.find((pic) => pic.id === selectedProfilePic)?.src ||
+    user?.profilePictureUrl;
 
   useEffect(() => {
     if (user?.profilePictureUrl) {
@@ -91,10 +94,11 @@ const VendorSettingsPage: React.FC = () => {
       <Card className="p-6">
         <div className="flex items-center gap-4 mb-6">
           <div className="relative">
-            {user?.profilePictureUrl ? (
+            {selectedProfileSrc ? (
               <img
-                src={user.profilePictureUrl}
-                alt={user.name}
+                key={`vendor-profile-${user?.id}-${selectedProfileSrc}`}
+                src={selectedProfileSrc}
+                alt={user?.name}
                 className="w-16 h-16 rounded-full object-cover border-2 border-primary-600"
               />
             ) : (

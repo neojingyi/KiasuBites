@@ -7,7 +7,6 @@ import {
   Clock,
   Filter,
   Star,
-  Search,
   Map as MapIcon,
   List,
   ShoppingBag,
@@ -259,12 +258,8 @@ const ConsumerHome: React.FC = () => {
       <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-4">
         <div className="flex flex-col md:flex-row gap-4 justify-between">
           <div className="relative flex-grow max-w-lg">
-            <Search
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-              size={18}
-            />
             <input
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
+              className="w-full pl-4 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
               placeholder="Search for bags, vendors, or areas..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}

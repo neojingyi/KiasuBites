@@ -159,14 +159,31 @@ export const apiSupabase = {
       if (signUpError) throw signUpError;
       if (!signUpData.user) throw new Error('Failed to create user');
       
-      // Create user profile
-      const { error: profileError } = await supabase.from('users').insert({
-        id: signUpData.user.id,
-        email,
-        name: email.split('@')[0],
-        role,
-      });
-      
+      // Create role-specific profile
+      const profileTable = role === UserRole.VENDOR ? 'vendors' : 'consumers';
+      const profileInsert =
+        role === UserRole.VENDOR
+          ? {
+              id: signUpData.user.id,
+              name: email.split('@')[0],
+              email,
+              address: '',
+              lat: 0,
+              lng: 0,
+              category: 'Other',
+              rating: 0,
+              total_reviews: 0,
+              is_verified: false,
+              photo_url: null,
+          }
+          : {
+              id: signUpData.user.id,
+              name: email.split('@')[0],
+              email,
+              dietary_preferences: [],
+              radius_km: 5,
+            };
+      const { error: profileError } = await supabase.from(profileTable).insert(profileInsert as any);
       if (profileError) throw profileError;
       
       return {
@@ -180,14 +197,17 @@ export const apiSupabase = {
       };
     }
     
+    const targetRole = (authData.user.user_metadata?.role as UserRole) || role;
+    const profileTable = targetRole === UserRole.VENDOR ? 'vendors' : 'consumers';
+
     // Get user profile
     const { data: profile, error: profileError } = await supabase
-      .from('users')
+      .from(profileTable)
       .select('*')
       .eq('id', authData.user.id)
       .single();
     
-    if (profileError) throw profileError;
+    if (profileError || !profile) throw profileError || new Error('Profile not found');
     
     // Get favorites
     const { data: favorites } = await supabase
@@ -197,7 +217,7 @@ export const apiSupabase = {
     
     // Get vendor verification status if vendor
     let isVerified = undefined;
-    if (role === UserRole.VENDOR) {
+    if (targetRole === UserRole.VENDOR) {
       const { data: vendor } = await supabase
         .from('vendors')
         .select('is_verified')
@@ -206,15 +226,22 @@ export const apiSupabase = {
       isVerified = vendor?.is_verified || false;
     }
     
+    const resolvedName =
+      (profile as any).name ||
+      authData.user.user_metadata?.name ||
+      authData.user.email?.split('@')[0] ||
+      'User';
+
     return {
       id: profile.id,
-      name: profile.name,
-      email: profile.email,
-      role: profile.role as UserRole,
-      dietaryPreferences: profile.dietary_preferences || [],
-      radiusKm: profile.radius_km,
+      name: resolvedName,
+      email: authData.user.email || email,
+      role: targetRole,
+      dietaryPreferences: targetRole === UserRole.VENDOR ? [] : profile.dietary_preferences || [],
+      radiusKm: targetRole === UserRole.VENDOR ? undefined : profile.radius_km,
       favorites: favorites?.map((f) => f.vendor_id) || [],
       isVerified,
+      profilePictureUrl: targetRole === UserRole.VENDOR ? profile.photo_url || undefined : profile.profile_picture_url || undefined,
     };
   },
 
@@ -227,21 +254,27 @@ export const apiSupabase = {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return null;
     
-    const { data: profile } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', session.user.id)
-      .single();
-    
+    // Try consumers then vendors
+    const fetchProfile = async (table: 'consumers' | 'vendors') => {
+      const { data } = await supabase.from(table).select('*').eq('id', session.user.id).maybeSingle();
+      return data;
+    };
+
+    let profile: any = await fetchProfile('consumers');
+    let role: UserRole = UserRole.CONSUMER;
+    if (!profile) {
+      profile = await fetchProfile('vendors');
+      role = UserRole.VENDOR;
+    }
     if (!profile) return null;
-    
+
     const { data: favorites } = await supabase
       .from('favorites')
       .select('vendor_id')
       .eq('user_id', session.user.id);
     
     let isVerified = undefined;
-    if (profile.role === UserRole.VENDOR) {
+    if (role === UserRole.VENDOR) {
       const { data: vendor } = await supabase
         .from('vendors')
         .select('is_verified')
@@ -252,11 +285,11 @@ export const apiSupabase = {
     
     return {
       id: profile.id,
-      name: profile.name,
-      email: profile.email,
-      role: profile.role as UserRole,
-      dietaryPreferences: profile.dietary_preferences || [],
-      radiusKm: profile.radius_km,
+      name: profile.name || session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
+      email: profile.email || session.user.email || '',
+      role,
+      dietaryPreferences: role === UserRole.VENDOR ? [] : profile.dietary_preferences || [],
+      radiusKm: role === UserRole.VENDOR ? undefined : profile.radius_km,
       favorites: favorites?.map((f) => f.vendor_id) || [],
       isVerified,
     };
@@ -269,14 +302,24 @@ export const apiSupabase = {
     
     const updateData: any = {};
     if (updates.name) updateData.name = updates.name;
-    if (updates.email) updateData.email = updates.email;
-    if (updates.dietaryPreferences) updateData.dietary_preferences = updates.dietaryPreferences;
-    if (updates.radiusKm !== undefined) updateData.radius_km = updates.radiusKm;
     if (updates.phoneNumber !== undefined) updateData.phone_number = updates.phoneNumber;
     if (updates.address !== undefined) updateData.address = updates.address;
+    // Only consumers have dietary/radius
+    const profileTable = updates.role === UserRole.VENDOR ? 'vendors' : 'consumers';
+    if (profileTable === 'consumers') {
+      if (updates.dietaryPreferences) updateData.dietary_preferences = updates.dietaryPreferences;
+      if (updates.radiusKm !== undefined) updateData.radius_km = updates.radiusKm;
+    }
+    if (updates.profilePictureUrl !== undefined) {
+      if (profileTable === 'vendors') {
+        updateData.photo_url = updates.profilePictureUrl;
+      } else {
+        updateData.profile_picture_url = updates.profilePictureUrl;
+      }
+    }
     
     const { data, error } = await supabase
-      .from('users')
+      .from(profileTable)
       .update(updateData)
       .eq('id', userId)
       .select()
@@ -284,13 +327,22 @@ export const apiSupabase = {
     
     if (error) throw error;
     
+    const role = profileTable === 'vendors' ? UserRole.VENDOR : UserRole.CONSUMER;
+    const { data: authUserData } = await supabase.auth.getUser();
+    const resolvedName =
+      (data as any).name ||
+      (updates as any).name ||
+      authUserData?.user?.user_metadata?.name ||
+      authUserData?.user?.email?.split('@')[0] ||
+      'User';
+
     return {
       id: data.id,
-      name: data.name,
-      email: data.email,
-      role: data.role as UserRole,
-      dietaryPreferences: data.dietary_preferences || [],
-      radiusKm: data.radius_km,
+      name: resolvedName,
+      email: data.email || (await supabase.auth.getUser()).data.user?.email || '',
+      role,
+      dietaryPreferences: role === UserRole.VENDOR ? [] : data.dietary_preferences || [],
+      radiusKm: role === UserRole.VENDOR ? undefined : data.radius_km,
       favorites: updates.favorites || [],
     };
   },
@@ -338,9 +390,7 @@ export const apiSupabase = {
       .select(`
         *,
         vendors!inner(name, category)
-      `)
-      .eq('status', 'active')
-      .gt('quantity', 0);
+      `);
     
     if (error) throw error;
     
@@ -551,4 +601,3 @@ export const apiSupabase = {
   // Vendor functions continue similarly...
   // (This is a reference implementation - full implementation would include all vendor functions)
 };
-

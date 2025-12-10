@@ -96,7 +96,11 @@ const App: React.FC = () => {
               }
             />
 
-            {/* Consumer Routes */}
+            {/* Consumer Routes - Home and Bag Details are public */}
+            <Route path="/consumer/home" element={<Layout><ConsumerHome /></Layout>} />
+            <Route path="/consumer/bags/:id" element={<Layout><BagDetails /></Layout>} />
+            
+            {/* Protected Consumer Routes */}
             <Route
               path="/consumer"
               element={
@@ -105,8 +109,6 @@ const App: React.FC = () => {
                 </ProtectedRoute>
               }
             >
-              <Route path="home" element={<ConsumerHome />} />
-              <Route path="bags/:id" element={<BagDetails />} />
               <Route path="orders" element={<ConsumerOrders />} />
               <Route path="profile" element={<ConsumerProfile />} />
               <Route path="favorites" element={<ConsumerFavorites />} />
