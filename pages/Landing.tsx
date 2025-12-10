@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button, Card, SectionHeader } from "../components/UI";
 import {
@@ -27,8 +27,31 @@ import { FloatingHoverEffect } from "../components/FloatingHoverEffect";
 import { BackgroundGradient } from "../components/ui/background-gradient";
 
 const Landing: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Detect OAuth callback tokens on root route and redirect to callback handler
+  useEffect(() => {
+    const hash = window.location.hash;
+    console.log("Landing page - checking hash for OAuth tokens:", hash);
+
+    // Check if hash contains OAuth tokens/code (but not already on /auth/callback route)
+    if (
+      hash &&
+      (hash.includes("access_token") ||
+        hash.includes("refresh_token") ||
+        hash.includes("code=")) &&
+      !hash.includes("/auth/callback")
+    ) {
+      console.log(
+        "OAuth tokens detected on root route, redirecting to callback..."
+      );
+      // Preserve the hash tokens when redirecting
+      // If hash is #access_token=..., redirect to #/auth/callback#access_token=...
+      const tokens = hash.replace(/^#/, "");
+      navigate(`/auth/callback#${tokens}`, { replace: true });
+    }
+  }, [navigate]);
 
   const handleFindFood = () => {
     const params = new URLSearchParams();
@@ -186,13 +209,14 @@ const Landing: React.FC = () => {
           transition={{ duration: 1.2, ease: "easeOut" }}
         />
         {/* Fading gradient overlay at the bottom blending into background */}
-        <div 
+        <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: 'linear-gradient(to bottom, transparent 0%, transparent 60%, rgba(254, 251, 241, 0.3) 80%, rgba(254, 251, 241, 0.7) 90%, #fefbf1 100%)'
+            background:
+              "linear-gradient(to bottom, transparent 0%, transparent 60%, rgba(254, 251, 241, 0.3) 80%, rgba(254, 251, 241, 0.7) 90%, #fefbf1 100%)",
           }}
         />
-        
+
         {/* Search Bar Overlay on Left Side */}
         <motion.div
           initial={{ opacity: 0, x: -30 }}
@@ -204,7 +228,7 @@ const Landing: React.FC = () => {
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-6 drop-shadow-lg">
               Find surprise bags near you
             </h2>
-            
+
             {/* Search Input */}
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="flex-1 relative">
@@ -219,20 +243,23 @@ const Landing: React.FC = () => {
                     }
                   }}
                   className="w-full pl-4 pr-4 py-4 rounded-lg border-2 border-white/20 bg-white/95 backdrop-blur-sm focus:border-white focus:outline-none focus:ring-2 focus:ring-white/50 text-gray-900 placeholder-gray-400 text-left"
-                  style={{ textAlign: 'left' }}
+                  style={{ textAlign: "left" }}
                 />
               </div>
-              <button 
+              <button
                 onClick={handleFindFood}
                 className="px-6 py-4 bg-gray-900 text-white rounded-lg font-semibold hover:bg-gray-800 transition-colors whitespace-nowrap"
               >
                 Find Food
               </button>
             </div>
-            
+
             {/* Sign In Link */}
             <div className="pt-2">
-              <Link to="/login" className="text-sm text-white hover:text-primary-200 transition-colors drop-shadow-md">
+              <Link
+                to="/login"
+                className="text-sm text-white hover:text-primary-200 transition-colors drop-shadow-md"
+              >
                 Or <span className="underline">Sign in</span>
               </Link>
             </div>
@@ -261,8 +288,9 @@ const Landing: React.FC = () => {
                 </span>
               </h2>
               <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-                Experience Kiasu<span className="text-primary-600">Bites</span> on your device. Discover amazing deals and
-                rescue delicious food with ease.
+                Experience Kiasu<span className="text-primary-600">Bites</span>{" "}
+                on your device. Discover amazing deals and rescue delicious food
+                with ease.
               </p>
             </motion.div>
           }
@@ -320,56 +348,56 @@ const Landing: React.FC = () => {
             subtitle="Join thousands of food lovers and vendors making a difference"
           />
           <div className="grid md:grid-cols-3 gap-8">
-          {[
-            {
-              icon: DollarSign,
-              title: "Save Money",
-              description:
-                "Get quality food for 50-70% off the original price. It's a steal.",
-              bgColor: "bg-yellow-50",
-              iconColor: "text-yellow-600",
-            },
-            {
-              icon: ShoppingBag,
-              title: "Discover Food",
-              description:
-                "Try new cafes, bakeries, and restaurants in your area with surprise bags.",
-              bgColor: "bg-primary-50",
-              iconColor: "text-primary-600",
-            },
-            {
-              icon: Leaf,
-              title: "Help the Planet",
-              description:
-                "Every meal rescued is less CO₂e emitted. Eat well, do good.",
-              bgColor: "bg-green-50",
-              iconColor: "text-green-600",
-            },
-          ].map((feature, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.15, duration: 0.5 }}
-            >
-              <Card className="p-8 text-center h-full">
-                <motion.div
-                  className={`w-16 h-16 rounded-2xl ${feature.bgColor} ${feature.iconColor} flex items-center justify-center mx-auto mb-6`}
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                >
-                  <feature.icon size={32} />
-                </motion.div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                  {feature.title}
-                </h3>
-                <p className="text-gray-600 leading-relaxed">
-                  {feature.description}
-                </p>
-              </Card>
-            </motion.div>
-          ))}
+            {[
+              {
+                icon: DollarSign,
+                title: "Save Money",
+                description:
+                  "Get quality food for 50-70% off the original price. It's a steal.",
+                bgColor: "bg-yellow-50",
+                iconColor: "text-yellow-600",
+              },
+              {
+                icon: ShoppingBag,
+                title: "Discover Food",
+                description:
+                  "Try new cafes, bakeries, and restaurants in your area with surprise bags.",
+                bgColor: "bg-primary-50",
+                iconColor: "text-primary-600",
+              },
+              {
+                icon: Leaf,
+                title: "Help the Planet",
+                description:
+                  "Every meal rescued is less CO₂e emitted. Eat well, do good.",
+                bgColor: "bg-green-50",
+                iconColor: "text-green-600",
+              },
+            ].map((feature, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.15, duration: 0.5 }}
+              >
+                <Card className="p-8 text-center h-full">
+                  <motion.div
+                    className={`w-16 h-16 rounded-2xl ${feature.bgColor} ${feature.iconColor} flex items-center justify-center mx-auto mb-6`}
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  >
+                    <feature.icon size={32} />
+                  </motion.div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                    {feature.title}
+                  </h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    {feature.description}
+                  </p>
+                </Card>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
@@ -382,51 +410,52 @@ const Landing: React.FC = () => {
             subtitle="Simple, fast, and rewarding for everyone"
           />
           <div className="grid md:grid-cols-3 gap-8 relative">
-          {[
-            {
-              step: "1",
-              title: "Browse",
-              description: "Discover surprise bags from local vendors near you",
-            },
-            {
-              step: "2",
-              title: "Reserve",
-              description: "Book your bag and get a confirmation code",
-            },
-            {
-              step: "3",
-              title: "Pick Up",
-              description: "Collect your food during the pickup window",
-            },
-          ].map((item, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.2, duration: 0.5 }}
-              className="relative"
-            >
-              {index < 2 && (
-                <div className="hidden md:block absolute top-12 left-full w-full h-0.5 bg-primary-200 z-0" />
-              )}
-              <div className="relative z-10">
-                <div className="w-24 h-24 rounded-full bg-primary-600 text-white flex items-center justify-center text-4xl font-bold mx-auto mb-6">
-                  {item.step}
-          </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3 text-center">
-                  {item.title}
-                </h3>
-                <p className="text-gray-600 text-center leading-relaxed">
-                  {item.description}
-                </p>
-        </div>
-            </motion.div>
-          ))}
+            {[
+              {
+                step: "1",
+                title: "Browse",
+                description:
+                  "Discover surprise bags from local vendors near you",
+              },
+              {
+                step: "2",
+                title: "Reserve",
+                description: "Book your bag and get a confirmation code",
+              },
+              {
+                step: "3",
+                title: "Pick Up",
+                description: "Collect your food during the pickup window",
+              },
+            ].map((item, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.2, duration: 0.5 }}
+                className="relative"
+              >
+                {index < 2 && (
+                  <div className="hidden md:block absolute top-12 left-full w-full h-0.5 bg-primary-200 z-0" />
+                )}
+                <div className="relative z-10">
+                  <div className="w-24 h-24 rounded-full bg-primary-600 text-white flex items-center justify-center text-4xl font-bold mx-auto mb-6">
+                    {item.step}
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 text-center">
+                    {item.title}
+                  </h3>
+                  <p className="text-gray-600 text-center leading-relaxed">
+                    {item.description}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
-      
+
       {/* CTA Section */}
       <motion.section
         initial={{ opacity: 0, y: 50 }}
@@ -451,9 +480,9 @@ const Landing: React.FC = () => {
                   variant="primary"
                   className="px-8 md:px-12 py-3 whitespace-nowrap relative z-[50] pointer-events-auto shadow-lg font-bold"
                 >
-             Join KiasuBites Free
+                  Join KiasuBites Free
                 </Button>
-        </Link>
+              </Link>
             </div>
           </div>
         </div>

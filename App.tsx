@@ -8,6 +8,11 @@ import { Toaster } from "react-hot-toast";
 import Landing from "./pages/Landing";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
+import AuthCallback from "./pages/auth/Callback";
+import LoginConsumer from "./pages/auth/LoginConsumer";
+import LoginVendor from "./pages/auth/LoginVendor";
+import RegisterConsumer from "./pages/auth/RegisterConsumer";
+import RegisterVendor from "./pages/auth/RegisterVendor";
 
 // Consumer Pages
 import ConsumerHome from "./pages/consumer/Home";
@@ -42,18 +47,22 @@ const ProtectedRoute = ({
 }) => {
   const { user, isLoading } = useAuth();
 
-  if (isLoading)
+  if (isLoading) {
+    console.log("ProtectedRoute loading", { user, allowedRole });
     return (
       <div className="h-screen flex items-center justify-center">
         Loading...
       </div>
     );
+  }
 
   if (!user) {
+    console.log("ProtectedRoute redirecting to /login (no user)", { allowedRole });
     return <Navigate to="/login" replace />;
   }
 
   if (allowedRole && user.role !== allowedRole) {
+    console.log("ProtectedRoute role mismatch", { userRole: user.role, allowedRole });
     return (
       <Navigate
         to={user.role === "vendor" ? "/vendor/dashboard" : "/consumer/home"}
@@ -88,6 +97,22 @@ const App: React.FC = () => {
               }
             />
             <Route
+              path="/login/consumer"
+              element={
+                <Layout>
+                  <LoginConsumer />
+                </Layout>
+              }
+            />
+            <Route
+              path="/login/vendor"
+              element={
+                <Layout>
+                  <LoginVendor />
+                </Layout>
+              }
+            />
+            <Route
               path="/register"
               element={
                 <Layout>
@@ -95,6 +120,23 @@ const App: React.FC = () => {
                 </Layout>
               }
             />
+            <Route
+              path="/register/consumer"
+              element={
+                <Layout>
+                  <RegisterConsumer />
+                </Layout>
+              }
+            />
+            <Route
+              path="/register/vendor"
+              element={
+                <Layout>
+                  <RegisterVendor />
+                </Layout>
+              }
+            />
+            <Route path="/auth/callback" element={<AuthCallback />} />
 
             {/* Consumer Routes - Home and Bag Details are public */}
             <Route path="/consumer/home" element={<Layout><ConsumerHome /></Layout>} />

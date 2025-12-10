@@ -53,10 +53,19 @@ const Layout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
     setShowLogoutConfirm(true);
   };
 
-  const handleLogoutConfirm = () => {
-    logout();
-    navigate("/");
-    setShowLogoutConfirm(false);
+  const handleLogoutConfirm = async () => {
+    try {
+      // Close any open UI immediately so we don't stare at the modal after logging out
+      setShowLogoutConfirm(false);
+      setShowProfileDropdown(false);
+      setIsMobileMenuOpen(false);
+
+      await logout();
+      console.log("Logout complete, navigating home");
+      navigate("/", { replace: true });
+    } catch (err) {
+      console.error("Logout failed", err);
+    }
   };
 
   const getNavItems = () => {
