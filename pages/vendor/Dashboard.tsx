@@ -44,10 +44,10 @@ const VendorDashboard: React.FC = () => {
         <div className="flex bg-white/80 backdrop-blur-sm p-1.5 rounded-xl border border-gray-200 shadow-sm">
            <motion.button 
              onClick={() => setActiveTab('overview')}
-             className={`px-5 py-2.5 text-sm font-semibold rounded-lg transition-all ${
+             className={`px-5 py-2.5 text-sm font-semibold rounded-lg transition-all border ${
                activeTab === 'overview' 
-                 ? 'bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-500/25' 
-                 : 'text-gray-600 hover:bg-gray-50'
+                 ? 'bg-primary-600 text-white border-primary-600' 
+                 : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
              }`}
              whileHover={{ scale: 1.05 }}
              whileTap={{ scale: 0.95 }}
@@ -56,10 +56,10 @@ const VendorDashboard: React.FC = () => {
            </motion.button>
            <motion.button 
              onClick={() => setActiveTab('financials')}
-             className={`px-5 py-2.5 text-sm font-semibold rounded-lg transition-all ${
+             className={`px-5 py-2.5 text-sm font-semibold rounded-lg transition-all border ${
                activeTab === 'financials' 
-                 ? 'bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-500/25' 
-                 : 'text-gray-600 hover:bg-gray-50'
+                 ? 'bg-primary-600 text-white border-primary-600' 
+                 : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
              }`}
              whileHover={{ scale: 1.05 }}
              whileTap={{ scale: 0.95 }}
