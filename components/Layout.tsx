@@ -38,6 +38,17 @@ const Layout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
 
+  // Debug: Log user profile picture when it changes
+  React.useEffect(() => {
+    if (user) {
+      console.log('Layout: User profile picture:', user.profilePictureUrl);
+      console.log('Layout: Full user object:', user);
+      console.log('Layout: Has profile picture?', !!user.profilePictureUrl);
+    } else {
+      console.log('Layout: No user logged in');
+    }
+  }, [user?.profilePictureUrl, user?.id]);
+
   const handleLogoutClick = () => {
     setShowLogoutConfirm(true);
   };
@@ -141,9 +152,13 @@ const Layout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
                         src={user.profilePictureUrl}
                         alt={user.name}
                         className="w-8 h-8 rounded-full object-cover border-2 border-primary-600"
+                        onLoad={() => {
+                          console.log('Profile picture loaded successfully:', user.profilePictureUrl);
+                        }}
                         onError={(e) => {
                           // Fallback to initials if image fails to load
                           console.error('Profile picture failed to load:', user.profilePictureUrl);
+                          console.error('User object:', { name: user.name, profilePictureUrl: user.profilePictureUrl });
                           const target = e.target as HTMLImageElement;
                           target.style.display = 'none';
                           // Show fallback
