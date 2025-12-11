@@ -24,12 +24,19 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const mapAuthUserToAppUser = (authUser: SupabaseUser): AppUser => {
   const storedRole = localStorage.getItem("preferredRole") as UserRole | null;
   const role = (authUser.user_metadata?.role as UserRole) || storedRole || UserRole.CONSUMER;
+  const meta = authUser.user_metadata || {};
+  const picture =
+    (meta.profile_picture_url as string) ||
+    (meta.avatar_url as string) ||
+    (meta.picture as string) ||
+    (meta.avatar as string);
+
   return {
     id: authUser.id,
     email: authUser.email || "",
-    name: (authUser.user_metadata?.name as string) || authUser.email?.split("@")[0] || "User",
+    name: (meta.name as string) || authUser.email?.split("@")[0] || "User",
     role,
-    profilePictureUrl: authUser.user_metadata?.profile_picture_url as string | undefined,
+    profilePictureUrl: picture,
   };
 };
 
@@ -53,9 +60,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           try {
             const { data, error } = await supabase.auth.getSessionFromUrl({ storeSession: true });
             console.log("getSessionFromUrl", { data, error });
-            // Clean up the URL (remove tokens) and send user to a sensible spot based on preferred role
-            const preferredRole = (localStorage.getItem("preferredRole") as UserRole | null) || UserRole.CONSUMER;
-            const fallbackPath = preferredRole === UserRole.VENDOR ? "/vendor/dashboard" : "/consumer/home";
+            // Clean up the URL (remove tokens) and send user to a sensible spot based on preferred role or URL
+            const storedRole = localStorage.getItem("preferredRole") as UserRole | null;
+            const hash = window.location.hash;
+            const inferredRole =
+              storedRole ||
+              (hash.includes("vendor") ? UserRole.VENDOR : UserRole.CONSUMER);
+            const fallbackPath = inferredRole === UserRole.VENDOR ? "/vendor/dashboard" : "/consumer/home";
             const cleanHash = `#${fallbackPath}`;
             window.history.replaceState({}, "", window.location.origin + cleanHash);
           } catch (err) {

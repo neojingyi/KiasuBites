@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import { GoogleSignInButton } from "../../components/GoogleSignInButton";
 
 const LoginConsumer: React.FC = () => {
-  const [email, setEmail] = useState("alexwang@gmail.com");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
