@@ -166,6 +166,7 @@ const ConsumerHome: React.FC = () => {
   const [filters, setFilters] = useState({
     categories: [] as string[],
     dietary: [] as string[],
+    pricing: [] as string[],
     time: "all" as "all" | "now" | "today" | "tomorrow",
   });
   const [showFilterPanel, setShowFilterPanel] = useState(false);
@@ -194,13 +195,37 @@ const ConsumerHome: React.FC = () => {
         filters.dietary.length === 0 ||
         bag.dietaryTags.some((tag) => filters.dietary.includes(tag));
 
+      const matchesPricing =
+        filters.pricing.length === 0 ||
+        filters.pricing.some((range) => {
+          const price = bag.price;
+          switch (range) {
+            case "under-5":
+              return price < 5;
+            case "5-10":
+              return price >= 5 && price < 10;
+            case "10-15":
+              return price >= 10 && price < 15;
+            case "15-plus":
+              return price >= 15;
+            default:
+              return true;
+          }
+        });
+
       // Simple time logic (mock)
       let matchesTime = true;
       if (filters.time === "now") {
         // Mock check: pickupStart is soon?
       }
 
-      return matchesSearch && matchesCategory && matchesDietary && matchesTime;
+      return (
+        matchesSearch &&
+        matchesCategory &&
+        matchesDietary &&
+        matchesPricing &&
+        matchesTime
+      );
     });
   }, [bags, searchTerm, filters]);
 
@@ -238,7 +263,7 @@ const ConsumerHome: React.FC = () => {
       });
   }, [vendors, filteredBags]);
 
-  const toggleFilter = (type: "categories" | "dietary", value: string) => {
+  const toggleFilter = (type: "categories" | "dietary" | "pricing", value: string) => {
     setFilters((prev) => ({
       ...prev,
       [type]: prev[type].includes(value)
@@ -347,6 +372,31 @@ const ConsumerHome: React.FC = () => {
                     </button>
                   )
                 )}
+              </div>
+            </div>
+            <div>
+              <h4 className="font-medium mb-2 text-sm text-gray-700">
+                Pricing
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { id: "under-5", label: "Under $5" },
+                  { id: "5-10", label: "$5 - $10" },
+                  { id: "10-15", label: "$10 - $15" },
+                  { id: "15-plus", label: "$15+" },
+                ].map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => toggleFilter("pricing", p.id)}
+                    className={`text-xs px-3 py-1 rounded-full border ${
+                      filters.pricing.includes(p.id)
+                        ? "bg-primary-600 text-white border-primary-600"
+                        : "bg-white border-gray-300 text-gray-600"
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
               </div>
             </div>
             <div>

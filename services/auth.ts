@@ -1,12 +1,16 @@
 import { supabase } from "./supabase";
 
 // Build a single SITE_URL that works in dev (localhost) and prod (Vercel).
-// Prefers env config; falls back to the current origin in-browser.
-export const SITE_URL =
+// If an env var is set to localhost but we are running on a non-localhost origin (e.g., production),
+// prefer the runtime origin to avoid redirecting to localhost.
+const runtimeOrigin =
+  typeof window !== "undefined" ? window.location.origin : undefined;
+const envSiteUrl =
   (typeof process !== "undefined" ? process.env.NEXT_PUBLIC_SITE_URL : undefined) ??
-  // Vite-style override if present
-  (typeof import.meta !== "undefined" ? (import.meta as any)?.env?.VITE_SITE_URL : undefined) ??
-  (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000");
+  (typeof import.meta !== "undefined" ? (import.meta as any)?.env?.VITE_SITE_URL : undefined);
+
+// Prefer the current origin (where the user actually is); fall back to env, then localhost.
+export const SITE_URL = runtimeOrigin ?? envSiteUrl ?? "http://localhost:3000";
 
 /**
  * Trigger Google OAuth flow via Supabase.
