@@ -1,13 +1,11 @@
 import { supabase } from "./supabase";
 
-// Build a redirect base that works in dev (localhost) and production (e.g. Vercel).
-// Prefers NEXT_PUBLIC_SITE_URL but falls back to the current origin in-browser.
-const baseUrl =
-  // Next.js-style env var for deployed + local environments
+// Build a single SITE_URL that works in dev (localhost) and prod (Vercel).
+// Prefers env config; falls back to the current origin in-browser.
+export const SITE_URL =
   (typeof process !== "undefined" ? process.env.NEXT_PUBLIC_SITE_URL : undefined) ??
-  // Vite-style env var if present
-  (import.meta as any)?.env?.VITE_SITE_URL ??
-  // Fallback to the current origin when running in the browser
+  // Vite-style override if present
+  (typeof import.meta !== "undefined" ? (import.meta as any)?.env?.VITE_SITE_URL : undefined) ??
   (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000");
 
 /**
@@ -19,7 +17,7 @@ export async function signInWithGoogle(): Promise<void> {
 
   // Redirect back into the app (auth callback). Using baseUrl keeps localhost in dev and Vercel URL in prod.
   // HashRouter expects the callback route after #/. Supabase will append tokens after this hash.
-  const redirectTo = `${baseUrl}/#/auth/callback`;
+  const redirectTo = `${SITE_URL}/#/auth/callback`;
   console.log("Initiating Google OAuth with redirectTo:", redirectTo);
 
   const { error } = await supabase.auth.signInWithOAuth({

@@ -177,6 +177,35 @@ const AuthCallback: React.FC = () => {
           return;
         }
 
+        // Read stored intent to decide where to route (consumer vs vendor)
+        const rawIntent = localStorage.getItem("kiasuAuthIntent");
+        let intent: { role?: string; nextPath?: string } | null = null;
+        if (rawIntent) {
+          try {
+            intent = JSON.parse(rawIntent);
+          } catch (e) {
+            console.warn("Failed to parse kiasuAuthIntent", e);
+          }
+        }
+
+        const intentRole = intent?.role;
+        const targetRole =
+          intentRole ||
+          user?.role ||
+          sessionData.session.user.user_metadata?.role ||
+          localStorage.getItem("preferredRole") ||
+          "consumer";
+
+        // Default to role-specific destinations; allow intent override via nextPath
+        const targetPath =
+          intent?.nextPath ||
+          (targetRole === "vendor" ? "/vendor/dashboard" : "/consumer/home");
+
+        // Keep preferredRole in sync so AuthContext maps metadata consistently
+        localStorage.setItem("preferredRole", targetRole);
+        console.log("Auth intent", { intent, targetRole, targetPath });
+        localStorage.removeItem("kiasuAuthIntent");
+
         console.log(
           "✅ Session verified! User:",
           sessionData.session.user.email
@@ -195,9 +224,8 @@ const AuthCallback: React.FC = () => {
           // If auth finished loading and we have a user, navigate immediately
           if (!authLoading && user) {
             clearInterval(checkAndNavigate);
-            console.log("User loaded, navigating to:", user.role);
-            const redirectPath =
-              user.role === "vendor" ? "/vendor/dashboard" : "/consumer/home";
+            const redirectPath = targetPath;
+            console.log("User loaded, navigating to:", redirectPath);
             navigate(redirectPath, { replace: true });
             return;
           }
@@ -206,17 +234,17 @@ const AuthCallback: React.FC = () => {
           if (!authLoading && attempts >= 20 && !user) {
             clearInterval(checkAndNavigate);
             console.log(
-              "Session exists but user profile not loaded yet - redirecting"
+              "Session exists but user profile not loaded yet - redirecting to targetPath"
             );
-            navigate("/", { replace: true });
+            navigate(targetPath, { replace: true });
             return;
           }
 
           // Timeout after 3 seconds
           if (attempts >= maxAttempts) {
             clearInterval(checkAndNavigate);
-            console.log("Timeout waiting for user - redirecting anyway");
-            navigate("/", { replace: true });
+            console.log("Timeout waiting for user - redirecting anyway to targetPath");
+            navigate(targetPath, { replace: true });
           }
         }, 100);
       } catch (err: any) {

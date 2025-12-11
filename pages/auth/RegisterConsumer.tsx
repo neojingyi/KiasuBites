@@ -59,7 +59,7 @@ const RegisterConsumer: React.FC = () => {
           Join KiasuBites as Consumer
         </h2>
 
-        <GoogleSignInButton />
+        <GoogleSignInButton role={UserRole.CONSUMER} nextPath="/register/consumer" />
         <div className="my-6 flex items-center text-gray-500 text-sm">
           <div className="flex-1 h-px bg-gray-200" />
           <span className="px-3">or continue with email</span>

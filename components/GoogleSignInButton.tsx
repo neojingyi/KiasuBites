@@ -3,7 +3,19 @@ import { Button } from "./UI";
 import { signInWithGoogle } from "../services/auth";
 import { UserRole } from "../types";
 
-export const GoogleSignInButton: React.FC<{ role?: UserRole }> = ({ role = UserRole.CONSUMER }) => {
+interface GoogleButtonProps {
+  role?: UserRole;
+  /**
+   * Optional explicit path to land on after OAuth completes.
+   * If not provided, we fall back to role-based defaults.
+   */
+  nextPath?: string;
+}
+
+export const GoogleSignInButton: React.FC<GoogleButtonProps> = ({
+  role = UserRole.CONSUMER,
+  nextPath,
+}) => {
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -11,6 +23,14 @@ export const GoogleSignInButton: React.FC<{ role?: UserRole }> = ({ role = UserR
     setError(null);
     setIsLoading(true);
     try {
+      // Persist intent so the callback knows which flow (consumer vs vendor) to send the user to.
+      const defaultNext =
+        nextPath ||
+        (role === UserRole.VENDOR ? "/register/vendor" : "/register/consumer");
+      localStorage.setItem(
+        "kiasuAuthIntent",
+        JSON.stringify({ role, nextPath: defaultNext })
+      );
       localStorage.setItem("preferredRole", role);
       await signInWithGoogle();
     } catch (err: any) {

@@ -76,7 +76,7 @@ const RegisterVendor: React.FC = () => {
           Join KiasuBites as Vendor
         </h2>
 
-        <GoogleSignInButton />
+        <GoogleSignInButton role={UserRole.VENDOR} nextPath="/register/vendor" />
         <div className="my-6 flex items-center text-gray-500 text-sm">
           <div className="flex-1 h-px bg-gray-200" />
           <span className="px-3">or continue with email</span>

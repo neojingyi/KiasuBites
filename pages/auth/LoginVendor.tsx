@@ -49,7 +49,7 @@ const LoginVendor: React.FC = () => {
           Vendor Login
         </h2>
 
-        <GoogleSignInButton role={UserRole.VENDOR} />
+        <GoogleSignInButton role={UserRole.VENDOR} nextPath="/vendor/dashboard" />
         <div className="my-6 flex items-center text-gray-500 text-sm">
           <div className="flex-1 h-px bg-gray-200" />
           <span className="px-3">or continue with email</span>

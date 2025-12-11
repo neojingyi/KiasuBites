@@ -23,7 +23,20 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const mapAuthUserToAppUser = (authUser: SupabaseUser): AppUser => {
   const storedRole = localStorage.getItem("preferredRole") as UserRole | null;
-  const role = (authUser.user_metadata?.role as UserRole) || storedRole || UserRole.CONSUMER;
+  let intentRole: UserRole | null = null;
+  const rawIntent = localStorage.getItem("kiasuAuthIntent");
+  if (rawIntent) {
+    try {
+      intentRole = (JSON.parse(rawIntent)?.role as UserRole) || null;
+    } catch {
+      intentRole = null;
+    }
+  }
+  const role =
+    (authUser.user_metadata?.role as UserRole) ||
+    storedRole ||
+    intentRole ||
+    UserRole.CONSUMER;
   const meta = authUser.user_metadata || {};
   const picture =
     (meta.profile_picture_url as string) ||
@@ -51,6 +64,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const init = async () => {
       try {
         setIsLoading(true);
+        // Read stored intent role so we can honor vendor/consumer choice during OAuth redirect cleanup.
+        let intentRole: UserRole | null = null;
+        const rawIntent = localStorage.getItem("kiasuAuthIntent");
+        if (rawIntent) {
+          try {
+            intentRole = (JSON.parse(rawIntent)?.role as UserRole) || null;
+          } catch (err) {
+            console.warn("Failed to parse kiasuAuthIntent", err);
+          }
+        }
+        if (intentRole && !localStorage.getItem("preferredRole")) {
+          localStorage.setItem("preferredRole", intentRole);
+        }
         // Handle OAuth redirects; if this fails we still continue and clear loading
         if (
           window.location.hash.includes("access_token") ||
@@ -61,7 +87,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const { data, error } = await supabase.auth.getSessionFromUrl({ storeSession: true });
             console.log("getSessionFromUrl", { data, error });
             // Clean up the URL (remove tokens) and send user to a sensible spot based on preferred role or URL
-            const storedRole = localStorage.getItem("preferredRole") as UserRole | null;
+            const storedRole =
+              (localStorage.getItem("preferredRole") as UserRole | null) || intentRole;
             const hash = window.location.hash;
             const inferredRole =
               storedRole ||
