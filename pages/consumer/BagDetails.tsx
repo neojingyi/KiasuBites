@@ -19,7 +19,7 @@ const BagDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const queryClient = useQueryClient();
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
@@ -63,12 +63,15 @@ const BagDetails: React.FC = () => {
 
   const toggleFavMutation = useMutation({
     mutationFn: () => api.toggleFavorite(bag!.vendorId),
-    onSuccess: () => {
-      // In a real app we'd invalidate user query, here we rely on page reload or optimistic UI for simplicity in mock
+    onSuccess: async (updatedUser) => {
+      // Persist the updated favorites into auth context so UI reflects immediately.
+      await updateUser({ favorites: updatedUser.favorites });
       toast.success(
         isFavorite ? "Removed from favorites" : "Added to favorites"
       );
-      // Reload user context would be needed here normally
+    },
+    onError: () => {
+      toast.error("Could not update favorites. Please try again.");
     },
   });
 
@@ -143,7 +146,9 @@ const BagDetails: React.FC = () => {
           >
             <Heart
               className={
-                isFavorite ? "fill-red-500 text-red-500" : "text-gray-400"
+                isFavorite
+                  ? "fill-red-500 text-red-500"
+                  : "text-gray-400 hover:text-red-500"
               }
               size={24}
             />
